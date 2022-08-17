@@ -59,7 +59,7 @@ watch(() => [props.timestamps, props.data], ([timestamps, data]) => {
             chart.options.scales!["y"]!.max = currentScaleMax + steps * props.maxGrowStep
         }
     }
-    if (props.justifyEnd) {
+    if (props.justifyEnd || true) {
         chart.options.scales!["x"]!.max = chart.data.labels![chart.data.labels!.length - 1]
         chart.options.scales!["x"]!.min = chart.data.labels![chart.data.labels!.length - 1] - props.timeWindowMs
     }
@@ -67,10 +67,13 @@ watch(() => [props.timestamps, props.data], ([timestamps, data]) => {
         chart.options.scales!["x"]!.min = chart.data.labels![0]
         chart.options.scales!["x"]!.max = chart.data.labels![0] + props.timeWindowMs
     }
-    if (!shallUpdate) return
-    setTimeout(() => shallUpdate = true, CHART_UPDATE_THROTTLE_MS)
+    //if (!shallUpdate) return
+    setTimeout(() => {shallUpdate = true; },  CHART_UPDATE_THROTTLE_MS)
     shallUpdate = false
-    chart.update()
+    //if (chart!.options.animations .duration! == 0)
+    //if (chart!.options.animations!.x?.duration == undefined)
+    setTimeout(() => { chart!.options.animations!.x = { duration: undefined } }, 0)
+    chart.update()    
 }, { deep: true })
 
 onMounted(() => {
@@ -86,6 +89,8 @@ onMounted(() => {
                 borderColor: "#b5e9cb",
                 pointRadius: 0,
                 pointHitRadius: 5,
+                cubicInterpolationMode: "monotone"
+                //parsing: false
                 //pointStyle: 
             }]
         },
@@ -93,7 +98,18 @@ onMounted(() => {
             responsive: true,
             maintainAspectRatio: false,
             normalized: true,
-            animation: false,                        
+            //animation: false,                        
+            // transitions: {
+            //     show: false
+            // },
+            animations: {
+                y: {
+                    duration: 0
+                },
+                x: {
+                    duration: 0
+                }                
+            },
             scales: {
                 x: {
                     type: 'time',

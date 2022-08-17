@@ -31,6 +31,14 @@ export interface Vehicle {
   state: VehicleState
 }
 
+interface VehicleBuffer {
+  timestamp: number,
+  speed: number[],
+  stateOfCharge: number[]
+}
+
+const vehicleBuffers = {} as Record<string, VehicleBuffer>
+
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
 let nextColorIndex = 0
@@ -70,6 +78,27 @@ export const useDataStore = defineStore("data", () => {
     else trackActiveVehicle()
   }
 
+  function flushBuffer(buffer: VehicleBuffer, state: VehicleState) {
+    let itemsToRemove = 0
+    while (itemsToRemove + 1 < state.historyTimestamps.length && state.historyTimestamps[itemsToRemove + 1] < +buffer.timestamp - HISTORY_TIME_WINDOW_MS)
+      itemsToRemove++
+    if (itemsToRemove) {
+      state.historyTimestamps.splice(0, itemsToRemove)
+      state.speedHistory.splice(0, itemsToRemove)
+      state.stateOfChargeHistory.splice(0, itemsToRemove)
+      state.historyJustifyEnd = true
+    }
+    state.historyTimestamps.push(+buffer.timestamp)
+    const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
+    state.speedHistory.push(avgSpeed)
+    const avgStateOfCharge = buffer.stateOfCharge.reduce((prev, current) => prev + current) / buffer.stateOfCharge.length
+    state.stateOfChargeHistory.push(avgStateOfCharge)
+
+    buffer.timestamp = 0
+    buffer.speed = []
+    buffer.stateOfCharge = []
+  }
+
   function processDataPoint(dataPoint: DataPoint) {
     let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == dataPoint.vehicleName)
     if (vehicleIndex < 0) {
@@ -92,10 +121,12 @@ export const useDataStore = defineStore("data", () => {
       if (nextColorIndex > 9) nextColorIndex = 0
       if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
       else vehicles.value.push(newVehicle)
+      vehicleBuffers[dataPoint.vehicleName] = { timestamp: 0, speed: [], stateOfCharge: [] }
       vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
     }
     if (!activeVehicle.value) activeVehicle.value = vehicles.value[vehicleIndex]
     const vehicleState = vehicles.value[vehicleIndex].state
+    const vehicleBuffer = vehicleBuffers[dataPoint.vehicleName]
     //we won't process an exactly the same point in time
     if (+dataPoint.time == vehicleState.latestTime) return
 
@@ -109,8 +140,12 @@ export const useDataStore = defineStore("data", () => {
       vehicleState.stateOfChargeHistory = []
       vehicleState.latestTime = 0
       vehicleState.historyJustifyEnd = false
-    }
 
+      vehicleBuffer.timestamp = 0
+      vehicleBuffer.speed = []
+      vehicleBuffer.stateOfCharge = []
+    }
+    // set the current state
     vehicleState.energy = +dataPoint.energy
     vehicleState.odometer = +dataPoint.odo
     vehicleState.speed = +dataPoint.speed
@@ -118,23 +153,16 @@ export const useDataStore = defineStore("data", () => {
     const gps = dataPoint.gps.split("|")
     vehicleState.latitude = +gps[0]
     vehicleState.longitude = +gps[1]
-    /*if (historyTimestamps.value.length > MAX_HISTORY_ITEM_COUNT) {
-      historyTimestamps.value.shift()
-      speedHistory.value.shift()
-      stateOfChargeHistory.value.shift()
-    }*/
-    let itemsToRemove = 0
-    while (itemsToRemove + 1 < vehicleState.historyTimestamps.length && vehicleState.historyTimestamps[itemsToRemove + 1] < +dataPoint.time - HISTORY_TIME_WINDOW_MS)
-      itemsToRemove++
-    if (itemsToRemove) {
-      vehicleState.historyTimestamps.splice(0, itemsToRemove)
-      vehicleState.speedHistory.splice(0, itemsToRemove)
-      vehicleState.stateOfChargeHistory.splice(0, itemsToRemove)
-      vehicleState.historyJustifyEnd = true
+
+    // check if we need to flush the history buffer
+    if (vehicleBuffer.timestamp != 0 && Math.round(vehicleBuffer.timestamp / 5000) != Math.round(+dataPoint.time / 5000)) {
+      flushBuffer(vehicleBuffer, vehicleState)
     }
-    vehicleState.historyTimestamps.push(+dataPoint.time)
-    vehicleState.speedHistory.push(+dataPoint.speed)
-    vehicleState.stateOfChargeHistory.push(+dataPoint.soc)
+
+    if (!vehicleBuffer.timestamp) vehicleBuffer.timestamp = +dataPoint.time
+    vehicleBuffer.speed.push(+dataPoint.speed)
+    vehicleBuffer.stateOfCharge.push(+dataPoint.soc)
+
     vehicleState.latestTime = +dataPoint.time
   }
 
