@@ -48,7 +48,7 @@ function jumpToActiveVehicle() {
 
 const showDetails = ref(true)
 
-async function setActiveVehicle(vehicleName: string){
+async function setActiveVehicle(vehicleName: string) {
   showDetails.value = false
   dataStore.setActiveVehicle(vehicleName)
   await nextTick()
@@ -121,7 +121,7 @@ async function setActiveVehicle(vehicleName: string){
         <label class="dashboard__item-label">Speed profile</label>
         <ViriTimeChart :timestamps="dataStore.activeVehicle.state.historyTimestamps"
           :data="dataStore.activeVehicle.state.speedHistory" :max="20" :max-grow-step="10" y-axis-title="Speed, km/h"
-          :justify-end="dataStore.activeVehicle.state.historyJustifyEnd" :time-window-ms="HISTORY_TIME_WINDOW_MS" />
+          :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>
     <div class="dashboard__row dashboard__row--chart">
@@ -132,15 +132,13 @@ async function setActiveVehicle(vehicleName: string){
         <label class="dashboard__item-label">State of charge profile</label>
         <ViriTimeChart :timestamps="dataStore.activeVehicle.state.historyTimestamps"
           :data="dataStore.activeVehicle.state.stateOfChargeHistory" :max="100" :max-grow-step="10"
-          y-axis-title="State of charge, %" :justify-end="dataStore.activeVehicle.state.historyJustifyEnd"
-          :time-window-ms="HISTORY_TIME_WINDOW_MS" />
+          y-axis-title="State of charge, %" :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>
   </main>
 </template>
 
 <style scoped>
-
 .ease-in-out--enter-active,
 .ease-in-out--leave-active {
   transition: opacity 0.128s ease;

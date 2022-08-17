@@ -16,7 +16,6 @@ const props = defineProps<{
     data: number[],
     max: number,
     maxGrowStep: number,
-    justifyEnd: boolean,
     timeWindowMs: number,
     yAxisTitle: string
 }>()
@@ -59,14 +58,10 @@ watch(() => [props.timestamps, props.data], ([timestamps, data]) => {
             chart.options.scales!["y"]!.max = currentScaleMax + steps * props.maxGrowStep
         }
     }
-    if (props.justifyEnd || true) {
-        chart.options.scales!["x"]!.max = chart.data.labels![chart.data.labels!.length - 1]
-        chart.options.scales!["x"]!.min = chart.data.labels![chart.data.labels!.length - 1] - props.timeWindowMs
-    }
-    else {
-        chart.options.scales!["x"]!.min = chart.data.labels![0]
-        chart.options.scales!["x"]!.max = chart.data.labels![0] + props.timeWindowMs
-    }
+    
+    chart.options.scales!["x"]!.max = chart.data.labels![chart.data.labels!.length - 1]
+    chart.options.scales!["x"]!.min = chart.data.labels![chart.data.labels!.length - 1] - props.timeWindowMs
+    
     //if (!shallUpdate) return
     setTimeout(() => {shallUpdate = true; },  CHART_UPDATE_THROTTLE_MS)
     shallUpdate = false

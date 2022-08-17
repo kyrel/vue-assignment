@@ -21,8 +21,7 @@ export interface VehicleState {
   longitude: number,
   historyTimestamps: number[],
   speedHistory: number[],
-  stateOfChargeHistory: number[],
-  historyJustifyEnd: boolean
+  stateOfChargeHistory: number[]
 }
 
 export interface Vehicle {
@@ -54,7 +53,7 @@ export const useDataStore = defineStore("data", () => {
   // const historyTimestamps = ref([] as number[])
   // const speedHistory = ref([] as number[])
   // const stateOfChargeHistory = ref([] as number[])
-  // const historyJustifyEnd = ref(false)
+
 
   const vehicles = ref([] as Vehicle[])
   const activeVehicle = ref(null as null | Vehicle)
@@ -85,8 +84,7 @@ export const useDataStore = defineStore("data", () => {
     if (itemsToRemove) {
       state.historyTimestamps.splice(0, itemsToRemove)
       state.speedHistory.splice(0, itemsToRemove)
-      state.stateOfChargeHistory.splice(0, itemsToRemove)
-      state.historyJustifyEnd = true
+      state.stateOfChargeHistory.splice(0, itemsToRemove)      
     }
     state.historyTimestamps.push(+buffer.timestamp)
     const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
@@ -113,8 +111,7 @@ export const useDataStore = defineStore("data", () => {
         longitude: 0,
         historyTimestamps: [],
         speedHistory: [],
-        stateOfChargeHistory: [],
-        historyJustifyEnd: false
+        stateOfChargeHistory: []
       }
       const newVehicle = { vehicleName: dataPoint.vehicleName, state: newState, colorIndex: nextColorIndex }
       nextColorIndex++
@@ -139,8 +136,7 @@ export const useDataStore = defineStore("data", () => {
       vehicleState.speedHistory = []
       vehicleState.stateOfChargeHistory = []
       vehicleState.latestTime = 0
-      vehicleState.historyJustifyEnd = false
-
+      
       vehicleBuffer.timestamp = 0
       vehicleBuffer.speed = []
       vehicleBuffer.stateOfCharge = []
