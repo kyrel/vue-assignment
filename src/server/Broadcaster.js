@@ -4,14 +4,17 @@ const fs            = require ( "fs")
 const Writable      = require ("stream").Writable
 
 class Broadcaster extends EventEmitter {
-	constructor() {
+	constructor(vehicleName, startFromRecord) {
 		super()
+		this.vehicleName = vehicleName
+		this.startFromRecord = startFromRecord || 0		
 	}
 
 	start() {
 		this.broadcasting = true
+		this.recordsRead = -1
 		const broadcast = () => {
-			console.log("Broadcasting...")
+			console.log(`${this.vehicleName} broadcasting...`)
 			const fileStream = fs.createReadStream("./meta/route.csv")
 
 			fileStream
@@ -21,6 +24,10 @@ class Broadcaster extends EventEmitter {
 				.pipe(new Writable({
 					objectMode: true,
 					write: (obj, enc, cb) => {
+						this.recordsRead++
+						if (this.recordsRead < this.startFromRecord)
+							return cb()
+						this.startFromRecord = 0 //So than on every non-first run we start from the beginning
 						if(!this.broadcasting)
 							return cb()
 
@@ -34,12 +41,12 @@ class Broadcaster extends EventEmitter {
 					}
 				}))
 				.once("finish", () => {
-					console.log("Finished broadcasting")
+					console.log(`${this.vehicleName} finished broadcasting`)
 					if(this.broadcasting) {
-						console.log("Re-broadcast")
+						console.log(`${this.vehicleName} re-broadcast`)
 						broadcast()
 					} else {
-						console.log("Stopped broadcast")
+						console.log(`${this.vehicleName} stopped broadcast`)
 						return
 					}
 				})
