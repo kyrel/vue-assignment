@@ -3,8 +3,8 @@ import { useDataStore } from './stores/data'
 import ViriBar from './components/ViriBar.vue'
 import ViriMap from './components/ViriMap.vue'
 
-import ViriTimeChart from './components/ViriTimeChart.vue';
-import { nextTick, ref } from 'vue';
+import ViriTimeChart from './components/ViriTimeChart.vue'
+import { computed, nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
@@ -16,27 +16,27 @@ function speedPercentage(val: number) {
   return val * 100 / max
 }
 
-const speedChartOptions = {
-  scales: {
-    x: {
-      type: 'time',
-      time: {
-        // Luxon format string
-        tooltipFormat: 'DD T'
-      },
-      title: {
-        display: true,
-        text: 'Date'
-      }
-    },
-    y: {
-      title: {
-        display: true,
-        text: 'speed'
-      }
-    }
-  }
-}
+// const speedChartOptions = {
+//   scales: {
+//     x: {
+//       type: 'time',
+//       time: {
+//         // Luxon format string
+//         tooltipFormat: 'DD T'
+//       },
+//       title: {
+//         display: true,
+//         text: 'Date'
+//       }
+//     },
+//     y: {
+//       title: {
+//         display: true,
+//         text: 'speed'
+//       }
+//     }
+//   }
+// }
 
 const map = ref(null as null | InstanceType<typeof ViriMap>)
 
@@ -54,6 +54,18 @@ async function setActiveVehicle(vehicleName: string) {
   await nextTick()
   showDetails.value = true
 }
+
+const speedData = computed(() => dataStore.vehicles.map(v => ({
+  datasetName: v.vehicleName,
+  colorIndex: v.colorIndex,
+  data: v.state.history.map(h => ({ x: h.timestamp, y: h.speed }))
+})))
+
+const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
+  datasetName: v.vehicleName,
+  colorIndex: v.colorIndex,
+  data: v.state.history.map(h => ({ x: h.timestamp, y: h.stateOfCharge }))
+})))
 
 </script>
 
@@ -119,8 +131,7 @@ async function setActiveVehicle(vehicleName: string) {
         :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">Speed profile</label>
-        <ViriTimeChart :timestamps="dataStore.activeVehicle.state.historyTimestamps"
-          :data="dataStore.activeVehicle.state.speedHistory" :max="20" :max-grow-step="10" y-axis-title="Speed, km/h"
+        <ViriTimeChart :datasets="speedData" :max="60" :max-grow-step="10" y-axis-title="Speed, km/h"
           :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>
@@ -130,9 +141,8 @@ async function setActiveVehicle(vehicleName: string) {
         :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">State of charge profile</label>
-        <ViriTimeChart :timestamps="dataStore.activeVehicle.state.historyTimestamps"
-          :data="dataStore.activeVehicle.state.stateOfChargeHistory" :max="100" :max-grow-step="10"
-          y-axis-title="State of charge, %" :time-window-ms="HISTORY_TIME_WINDOW_MS" />
+        <ViriTimeChart :datasets="stateOfChargeData" :max="100" :max-grow-step="10" y-axis-title="State of charge, %"
+          :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>
   </main>

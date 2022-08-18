@@ -11,6 +11,12 @@ interface DataPoint {
   vehicleName: string
 }
 
+export interface HistoryPoint {
+  timestamp: number,
+  speed: number,
+  stateOfCharge: number
+}
+
 export interface VehicleState {
   latestTime: number,
   energy: number,
@@ -19,9 +25,7 @@ export interface VehicleState {
   stateOfCharge: number,
   latitude: number,
   longitude: number,
-  historyTimestamps: number[],
-  speedHistory: number[],
-  stateOfChargeHistory: number[]
+  history: HistoryPoint[]
 }
 
 export interface Vehicle {
@@ -79,19 +83,15 @@ export const useDataStore = defineStore("data", () => {
 
   function flushBuffer(buffer: VehicleBuffer, state: VehicleState) {
     let itemsToRemove = 0
-    while (itemsToRemove + 1 < state.historyTimestamps.length && state.historyTimestamps[itemsToRemove + 1] < +buffer.timestamp - HISTORY_TIME_WINDOW_MS)
+    while (itemsToRemove + 1 < state.history.length && state.history[itemsToRemove + 1].timestamp < +buffer.timestamp - HISTORY_TIME_WINDOW_MS)
       itemsToRemove++
     if (itemsToRemove) {
-      state.historyTimestamps.splice(0, itemsToRemove)
-      state.speedHistory.splice(0, itemsToRemove)
-      state.stateOfChargeHistory.splice(0, itemsToRemove)      
+      state.history.splice(0, itemsToRemove)      
     }
-    state.historyTimestamps.push(+buffer.timestamp)
     const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
-    state.speedHistory.push(avgSpeed)
     const avgStateOfCharge = buffer.stateOfCharge.reduce((prev, current) => prev + current) / buffer.stateOfCharge.length
-    state.stateOfChargeHistory.push(avgStateOfCharge)
-
+    state.history.push({timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge})
+    
     buffer.timestamp = 0
     buffer.speed = []
     buffer.stateOfCharge = []
@@ -109,9 +109,7 @@ export const useDataStore = defineStore("data", () => {
         stateOfCharge: 0,
         latitude: 0,
         longitude: 0,
-        historyTimestamps: [],
-        speedHistory: [],
-        stateOfChargeHistory: []
+        history: []        
       }
       const newVehicle = { vehicleName: dataPoint.vehicleName, state: newState, colorIndex: nextColorIndex }
       nextColorIndex++
@@ -132,9 +130,7 @@ export const useDataStore = defineStore("data", () => {
 
     // the file is over and we have to restart
     if (+dataPoint.time < vehicleState.latestTime) {
-      vehicleState.historyTimestamps = []
-      vehicleState.speedHistory = []
-      vehicleState.stateOfChargeHistory = []
+      vehicleState.history = []
       vehicleState.latestTime = 0
       
       vehicleBuffer.timestamp = 0
