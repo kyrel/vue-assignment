@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useDataStore } from './stores/data'
+import { useDataStore, type HistoryPoint, type Vehicle } from './stores/data'
 import ViriBar from './components/ViriBar.vue'
 import ViriMap from './components/ViriMap.vue'
 
 import ViriTimeChart from './components/ViriTimeChart.vue'
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import colorPool from '@/colorPool'
+import { storeToRefs } from 'pinia';
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
@@ -39,6 +40,37 @@ function speedPercentage(val: number) {
 // }
 
 const map = ref(null as null | InstanceType<typeof ViriMap>)
+const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
+const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
+const watchedVehicleNames = [] as string[]
+
+function processChange(vehicleName: string, colorIndex: number, historyPoint?: HistoryPoint) {
+  if (!historyPoint) return
+  //console.log("processChange")
+  speedChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.speed)
+  stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
+}
+
+function watchVehicle(vehicle: Vehicle) {  
+  if (!watchedVehicleNames.includes(vehicle.vehicleName)) {
+    watchedVehicleNames.push(vehicle.vehicleName)
+    processChange(vehicle.vehicleName, vehicle.colorIndex, vehicle.state.historyPoint)
+    watch(() => vehicle.state.historyPoint, historyPoint => {
+      processChange(vehicle.vehicleName, vehicle.colorIndex, historyPoint)
+    })
+  }  
+}
+
+//THIS IS SOME UGLY EVENT EMULATION
+const {vehicles : vehiclesRef} = storeToRefs(dataStore)
+for (let vehicle of vehiclesRef.value) { 
+  watchVehicle(vehicle)
+}
+
+watch(()=>vehiclesRef.value.length, len => {
+  for (let vehicle of vehiclesRef.value) watchVehicle(vehicle)
+})
+
 
 function jumpToActiveVehicle() {
   if (dataStore.activeVehicle?.vehicleName == dataStore.trackedVehicleName) return
@@ -55,17 +87,17 @@ async function setActiveVehicle(vehicleName: string) {
   showDetails.value = true
 }
 
-const speedData = computed(() => dataStore.vehicles.map(v => ({
-  datasetName: v.vehicleName,
-  colorIndex: v.colorIndex,
-  data: v.state.history.map(h => ({ x: h.timestamp, y: h.speed }))
-})))
+// const speedData = computed(() => dataStore.vehicles.map(v => ({
+//   datasetName: v.vehicleName,
+//   colorIndex: v.colorIndex,
+//   data: v.state.history.map(h => ({ x: h.timestamp, y: h.speed }))
+// })))
 
-const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
-  datasetName: v.vehicleName,
-  colorIndex: v.colorIndex,
-  data: v.state.history.map(h => ({ x: h.timestamp, y: h.stateOfCharge }))
-})))
+// const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
+//   datasetName: v.vehicleName,
+//   colorIndex: v.colorIndex,
+//   data: v.state.history.map(h => ({ x: h.timestamp, y: h.stateOfCharge }))
+// })))
 
 </script>
 
@@ -131,7 +163,7 @@ const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
         :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">Speed profile</label>
-        <ViriTimeChart :datasets="speedData" :max="60" :max-grow-step="10" y-axis-title="Speed, km/h"
+        <ViriTimeChart :max="60" :max-grow-step="10" y-axis-title="Speed, km/h" ref="speedChart"
           :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>
@@ -141,7 +173,7 @@ const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
         :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">State of charge profile</label>
-        <ViriTimeChart :datasets="stateOfChargeData" :max="100" :max-grow-step="10" y-axis-title="State of charge, %"
+        <ViriTimeChart :max="100" :max-grow-step="10" y-axis-title="State of charge, %" ref="stateOfChargeChart"
           :time-window-ms="HISTORY_TIME_WINDOW_MS" />
       </div>
     </div>

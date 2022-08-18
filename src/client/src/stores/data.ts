@@ -25,7 +25,8 @@ export interface VehicleState {
   stateOfCharge: number,
   latitude: number,
   longitude: number,
-  history: HistoryPoint[]
+  //history: HistoryPoint[]
+  historyPoint?: HistoryPoint
 }
 
 export interface Vehicle {
@@ -82,16 +83,16 @@ export const useDataStore = defineStore("data", () => {
   }
 
   function flushBuffer(buffer: VehicleBuffer, state: VehicleState) {
-    let itemsToRemove = 0
+    /*let itemsToRemove = 0
     while (itemsToRemove + 1 < state.history.length && state.history[itemsToRemove + 1].timestamp < +buffer.timestamp - HISTORY_TIME_WINDOW_MS)
       itemsToRemove++
     if (itemsToRemove) {
       state.history.splice(0, itemsToRemove)      
-    }
+    }*/
     const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
     const avgStateOfCharge = buffer.stateOfCharge.reduce((prev, current) => prev + current) / buffer.stateOfCharge.length
-    state.history.push({timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge})
-    
+    //state.history.push({timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge})
+    state.historyPoint = { timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge }
     buffer.timestamp = 0
     buffer.speed = []
     buffer.stateOfCharge = []
@@ -108,8 +109,7 @@ export const useDataStore = defineStore("data", () => {
         speed: 0,
         stateOfCharge: 0,
         latitude: 0,
-        longitude: 0,
-        history: []        
+        longitude: 0
       }
       const newVehicle = { vehicleName: dataPoint.vehicleName, state: newState, colorIndex: nextColorIndex }
       nextColorIndex++
@@ -130,7 +130,7 @@ export const useDataStore = defineStore("data", () => {
 
     // the file is over and we have to restart
     if (+dataPoint.time < vehicleState.latestTime) {
-      vehicleState.history = []
+      vehicleState.historyPoint = undefined
       vehicleState.latestTime = 0
       
       vehicleBuffer.timestamp = 0
@@ -148,6 +148,7 @@ export const useDataStore = defineStore("data", () => {
 
     // check if we need to flush the history buffer
     if (vehicleBuffer.timestamp != 0 && Math.round(vehicleBuffer.timestamp / 5000) != Math.round(+dataPoint.time / 5000)) {
+      //console.log("Flushing buffer for ", dataPoint.vehicleName)
       flushBuffer(vehicleBuffer, vehicleState)
     }
 

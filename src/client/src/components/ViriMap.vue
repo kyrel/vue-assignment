@@ -17,7 +17,7 @@ const props = defineProps<{
 
 const yandexMapSettings = {
   apiKey: '680bf2a4-9435-46be-99c5-be6e47b8d00f',
-  lang: 'en_US'
+  lang: 'en_RU'
 }
 
 //const marker = ref<InstanceType<typeof YandexMarker> | null>(null)
