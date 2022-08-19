@@ -27,23 +27,23 @@ function processChange(vehicleName: string, colorIndex: number, historyPoint?: H
   stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
 }
 
-function watchVehicle(vehicle: Vehicle) {  
+function watchVehicle(vehicle: Vehicle) {
   if (!watchedVehicleNames.includes(vehicle.vehicleName)) {
     watchedVehicleNames.push(vehicle.vehicleName)
     processChange(vehicle.vehicleName, vehicle.colorIndex, vehicle.state.historyPoint)
     watch(() => vehicle.state.historyPoint, historyPoint => {
       processChange(vehicle.vehicleName, vehicle.colorIndex, historyPoint)
     })
-  }  
+  }
 }
 
 //THIS IS SOME UGLY EVENT EMULATION
-const {vehicles : vehiclesRef} = storeToRefs(dataStore)
-for (let vehicle of vehiclesRef.value) { 
+const { vehicles: vehiclesRef } = storeToRefs(dataStore)
+for (let vehicle of vehiclesRef.value) {
   watchVehicle(vehicle)
 }
 
-watch(()=>vehiclesRef.value.length, len => {
+watch(() => vehiclesRef.value.length, len => {
   for (let vehicle of vehiclesRef.value) watchVehicle(vehicle)
 })
 
@@ -67,14 +67,14 @@ async function setActiveVehicle(vehicleName: string) {
 <template>
   <main class="dashboard__column" v-if="dataStore.activeVehicle">
     <div class="dashboard__row">
-      <div class="dashboard__column dashboard__column--map">
+      <div class="dashboard__map">
         <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
           :longitude="dataStore.activeVehicle.state.longitude"
           :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, preset: colorPool[v.colorIndex].ymapPreset }))"
           :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
       </div>
-      <div class="dashboard__column dashboard__column--bars">
-        <div class="dashboard__row dashboard__vehicle-buttons">
+      <div class="dashboard__column dashboard__selector-and-details">
+        <div class="dashboard__vehicle-selector">
           <button v-for="vehicle of dataStore.vehicles" @click="setActiveVehicle(vehicle.vehicleName)"
             class="color-coded-button"
             :class="[{ 'color-coded-button--active': vehicle == dataStore.activeVehicle }, 'color-coded-button--' + vehicle.colorIndex]">
@@ -83,28 +83,22 @@ async function setActiveVehicle(vehicleName: string) {
         </div>
         <Transition name="ease-in-out-" mode="out-in">
           <div v-if="showDetails" class="dashboard__column">
-            <div class="dashboard__row">
-              <div class="dashboard__bar-item dashboard__vehicle-map-controls">
-                <button @click="jumpToActiveVehicle">Jump to vehicle locaiton</button>
-                <label>
-                  <input type="checkbox" :checked="dataStore.activeVehicle.vehicleName == dataStore.trackedVehicleName"
-                    @change="dataStore.toggleActiveVehicleTrack()"> Track vehicle on map
-                </label>
-              </div>
+            <div class="dashboard__bar-item dashboard__vehicle-map-controls">
+              <button @click="jumpToActiveVehicle">Jump to vehicle locaiton</button>
+              <label>
+                <input type="checkbox" :checked="dataStore.activeVehicle.vehicleName == dataStore.trackedVehicleName"
+                  @change="dataStore.toggleActiveVehicleTrack()"> Track vehicle on map
+              </label>
             </div>
-            <div class="dashboard__row">
-              <div class="dashboard__bar-item">
-                <label class="dashboard__item-label">Current Speed</label>
-                <ViriBar :percentage-full="speedPercentage(dataStore.activeVehicle.state.speed)"
-                  :label="`${dataStore.activeVehicle.state.speed.toFixed(1)}&nbsp;km/h`" />
-              </div>
+            <div class="dashboard__bar-item">
+              <label class="dashboard__item-label">Current Speed</label>
+              <ViriBar :percentage-full="speedPercentage(dataStore.activeVehicle.state.speed)"
+                :label="`${dataStore.activeVehicle.state.speed.toFixed(1)}&nbsp;km/h`" />
             </div>
-            <div class="dashboard__row">
-              <div class="dashboard__bar-item">
-                <label class="dashboard__item-label">State of charge</label>
-                <ViriBar :percentage-full="dataStore.activeVehicle.state.stateOfCharge"
-                  :label="`${dataStore.activeVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
-              </div>
+            <div class="dashboard__bar-item">
+              <label class="dashboard__item-label">State of charge</label>
+              <ViriBar :percentage-full="dataStore.activeVehicle.state.stateOfCharge"
+                :label="`${dataStore.activeVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
             </div>
             <div class="dashboard__row dashboard__row--items">
               <div class="dashboard__value-item">
@@ -120,19 +114,15 @@ async function setActiveVehicle(vehicleName: string) {
         </Transition>
       </div>
     </div>
-    <div class="dashboard__row dashboard__row--chart">
-      <div class="dashboard__chart-item">
-        <label class="dashboard__item-label">Speed profile</label>
-        <ViriTimeChart :max="60" :max-grow-step="10" y-axis-title="Speed, km/h" ref="speedChart"
-          :time-window-ms="HISTORY_TIME_WINDOW_MS" />
-      </div>
+    <div>
+      <label class="dashboard__item-label">Speed profile</label>
+      <ViriTimeChart :max="60" :max-grow-step="10" y-axis-title="Speed, km/h" ref="speedChart"
+        :time-window-ms="HISTORY_TIME_WINDOW_MS" />
     </div>
-    <div class="dashboard__row dashboard__row--chart">
-      <div class="dashboard__chart-item">
-        <label class="dashboard__item-label">State of charge profile</label>
-        <ViriTimeChart :max="100" :max-grow-step="10" y-axis-title="State of charge, %" ref="stateOfChargeChart"
-          :time-window-ms="HISTORY_TIME_WINDOW_MS" />
-      </div>
+    <div>
+      <label class="dashboard__item-label">State of charge profile</label>
+      <ViriTimeChart :max="100" :max-grow-step="10" y-axis-title="State of charge, %" ref="stateOfChargeChart"
+        :time-window-ms="HISTORY_TIME_WINDOW_MS" />
     </div>
   </main>
 </template>
@@ -148,9 +138,13 @@ async function setActiveVehicle(vehicleName: string) {
   opacity: 0;
 }
 
-.dashboard__vehicle-buttons {
+.dashboard__vehicle-selector {
   border-bottom: 1px solid #bdbdbd;
   padding-bottom: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 10px;
 }
 
 .dashboard__vehicle-map-controls {
@@ -211,24 +205,13 @@ async function setActiveVehicle(vehicleName: string) {
   row-gap: 20px;
 }
 
-@media (max-width: 1024px) {
-  .dashboard__row {
-    row-gap: 10px;
-  }
-}
-
-.dashboard__column--map {
+.dashboard__map {
   width: 496px;
-
 }
 
-.dashboard__column--bars {
+.dashboard__selector-and-details {
   width: 380px;
 }
-
-/* .dashboard__column--map :deep(.yandex-container) {
-  height: 100%;
-} */
 
 .dashboard__row {
   display: flex;
@@ -242,15 +225,12 @@ async function setActiveVehicle(vehicleName: string) {
     row-gap: 10px;
   }
 }
+
 .dashboard__row--items {
   column-gap: 0;
 }
 
 .dashboard__bar-item {
-  flex-grow: 1;
-}
-
-.dashboard__chart-item {
   flex-grow: 1;
 }
 
@@ -270,15 +250,11 @@ async function setActiveVehicle(vehicleName: string) {
     flex-flow: row wrap;
   }
 
-  .dashboard__column--map {
+  .dashboard__map {
     width: 100%;
   }
 
-  .dashboard__column--bars {
-    width: 100%;
-  }
-
-  .dashboard__chart-item {
+  .dashboard__selector-and-details {
     width: 100%;
   }
 }
