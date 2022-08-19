@@ -19,33 +19,39 @@ function speedPercentage(val: number) {
 const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
-const watchedVehicleNames = [] as string[]
+//const watchedVehicleNames = [] as string[]
 
-function processChange(vehicleName: string, colorIndex: number, historyPoint?: HistoryPoint) {
-  if (!historyPoint) return
-  speedChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.speed)
-  stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
-}
+// function processChange(vehicleName: string, colorIndex: number, historyPoint?: HistoryPoint) {
+//   if (!historyPoint) return
+//   speedChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.speed)
+//   stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
+// }
 
-function watchVehicle(vehicle: Vehicle) {
-  if (!watchedVehicleNames.includes(vehicle.vehicleName)) {
-    watchedVehicleNames.push(vehicle.vehicleName)
-    processChange(vehicle.vehicleName, vehicle.colorIndex, vehicle.state.historyPoint)
-    watch(() => vehicle.state.historyPoint, historyPoint => {
-      processChange(vehicle.vehicleName, vehicle.colorIndex, historyPoint)
-    })
-  }
-}
+// function watchVehicle(vehicle: Vehicle) {
+//   if (!watchedVehicleNames.includes(vehicle.vehicleName)) {
+//     watchedVehicleNames.push(vehicle.vehicleName)
+//     processChange(vehicle.vehicleName, vehicle.colorIndex, vehicle.state.historyPoint)
+//     watch(() => vehicle.state.historyPoint, historyPoint => {
+//       processChange(vehicle.vehicleName, vehicle.colorIndex, historyPoint)
+//     })
+//   }
+// }
 
-//THIS IS SOME UGLY EVENT EMULATION
-const { vehicles: vehiclesRef } = storeToRefs(dataStore)
-for (let vehicle of vehiclesRef.value) {
-  watchVehicle(vehicle)
-}
+dataStore.addDataListener((data)=>{
+  //const {timestamp, speed, stateOfCharge} = (e as CustomEvent).detail
+  speedChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.speed)
+  stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.stateOfCharge)
+})  
 
-watch(() => vehiclesRef.value.length, len => {
-  for (let vehicle of vehiclesRef.value) watchVehicle(vehicle)
-})
+// //THIS IS SOME UGLY EVENT EMULATION
+// const { vehicles: vehiclesRef } = storeToRefs(dataStore)
+// for (let vehicle of vehiclesRef.value) {
+//   watchVehicle(vehicle)
+// }
+
+// watch(() => vehiclesRef.value.length, len => {
+//   for (let vehicle of vehiclesRef.value) watchVehicle(vehicle)
+// })
 
 
 function jumpToActiveVehicle() {

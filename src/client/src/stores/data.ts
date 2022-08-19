@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+/**
+ * A data point received from the socket
+ */
 interface DataPoint {
   time: number,
   energy: number,
@@ -12,6 +15,14 @@ interface DataPoint {
 }
 
 export interface HistoryPoint {
+  timestamp: number,
+  speed: number,
+  stateOfCharge: number
+}
+
+export interface HistoryData {
+  vehicleName: string,
+  colorIndex: number,
   timestamp: number,
   speed: number,
   stateOfCharge: number
@@ -34,15 +45,37 @@ export interface Vehicle {
   state: VehicleState
 }
 
-interface VehicleBuffer {
-  timestamp: number,
-  speed: number[],
-  stateOfCharge: number[]
+class VehicleBuffer {
+  timestamp: number = 0
+  speed: number[] = []
+  stateOfCharge: number[] = []
+
+  reset() {
+    this.timestamp = 0
+    this.speed = []
+    this.stateOfCharge = []
+  }
+
+  flush() {
+    const avgSpeed = this.speed.reduce((prev, current) => prev + current) / this.speed.length
+    const avgStateOfCharge = this.stateOfCharge.reduce((prev, current) => prev + current) / this.stateOfCharge.length
+    const result = { timestamp: +this.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge }
+    this.reset()
+    return result
+  }
+
+  add(time: number, speed: number, stateOfCharge: number) {
+    if (this.timestamp != 0 && Math.round(this.timestamp / 5000) != Math.round(time / 5000)) {
+      return this.flush()
+    }
+
+    if (!this.timestamp) this.timestamp = time
+    this.speed.push(speed)
+    this.stateOfCharge.push(stateOfCharge)
+  }
 }
 
 const vehicleBuffers = {} as Record<string, VehicleBuffer>
-
-const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
 let nextColorIndex = 0
 
@@ -51,6 +84,7 @@ export const useDataStore = defineStore("data", () => {
   const vehicles = ref([] as Vehicle[])
   const activeVehicle = ref(null as null | Vehicle)
   const trackedVehicleName = ref(null as null | string)
+  const history = new class extends EventTarget { }
 
   function setActiveVehicle(name: string) {
     activeVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
@@ -70,16 +104,9 @@ export const useDataStore = defineStore("data", () => {
     else trackActiveVehicle()
   }
 
-  function flushBuffer(buffer: VehicleBuffer, state: VehicleState) {
-    const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
-    const avgStateOfCharge = buffer.stateOfCharge.reduce((prev, current) => prev + current) / buffer.stateOfCharge.length
-    //state.history.push({timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge})
-    state.historyPoint = { timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge }
-    buffer.timestamp = 0
-    buffer.speed = []
-    buffer.stateOfCharge = []
-  }
-
+  /**
+   * Process a data point that appeared out of the WebSocket connection
+   */
   function processDataPoint(dataPoint: DataPoint) {
     let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == dataPoint.vehicleName)
     if (vehicleIndex < 0) {
@@ -98,11 +125,12 @@ export const useDataStore = defineStore("data", () => {
       if (nextColorIndex > 9) nextColorIndex = 0
       if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
       else vehicles.value.push(newVehicle)
-      vehicleBuffers[dataPoint.vehicleName] = { timestamp: 0, speed: [], stateOfCharge: [] }
+      vehicleBuffers[dataPoint.vehicleName] = new VehicleBuffer()
       vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
     }
-    if (!activeVehicle.value) activeVehicle.value = vehicles.value[vehicleIndex]
-    const vehicleState = vehicles.value[vehicleIndex].state
+    const vehicle = vehicles.value[vehicleIndex]
+    if (!activeVehicle.value) activeVehicle.value = vehicle
+    const vehicleState = vehicle.state
     const vehicleBuffer = vehicleBuffers[dataPoint.vehicleName]
     //we won't process an exactly the same point in time
     if (+dataPoint.time == vehicleState.latestTime) return
@@ -114,10 +142,8 @@ export const useDataStore = defineStore("data", () => {
     if (+dataPoint.time < vehicleState.latestTime) {
       vehicleState.historyPoint = undefined
       vehicleState.latestTime = 0
-      
-      vehicleBuffer.timestamp = 0
-      vehicleBuffer.speed = []
-      vehicleBuffer.stateOfCharge = []
+
+      vehicleBuffer.reset()
     }
     // set the current state
     vehicleState.energy = +dataPoint.energy
@@ -128,16 +154,17 @@ export const useDataStore = defineStore("data", () => {
     vehicleState.latitude = +gps[0]
     vehicleState.longitude = +gps[1]
 
-    // check if we need to flush the history buffer
-    if (vehicleBuffer.timestamp != 0 && Math.round(vehicleBuffer.timestamp / 5000) != Math.round(+dataPoint.time / 5000)) {
-      flushBuffer(vehicleBuffer, vehicleState)
+    const aggregate = vehicleBuffer.add(+dataPoint.time, +dataPoint.speed, +dataPoint.soc)
+    if (aggregate) {
+      vehicleState.historyPoint = aggregate
+      history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: dataPoint.vehicleName, colorIndex: vehicle.colorIndex, ...aggregate} }))
     }
 
-    if (!vehicleBuffer.timestamp) vehicleBuffer.timestamp = +dataPoint.time
-    vehicleBuffer.speed.push(+dataPoint.speed)
-    vehicleBuffer.stateOfCharge.push(+dataPoint.soc)
-
     vehicleState.latestTime = +dataPoint.time
+  }
+
+  function addDataListener(listener: (historyData: HistoryData) => void) {
+    history.addEventListener("data", (e) => listener((e as CustomEvent).detail))
   }
 
   const socket = new WebSocket(import.meta.env.VITE_WS_ROOT)
@@ -146,5 +173,5 @@ export const useDataStore = defineStore("data", () => {
     processDataPoint(data)
   }
 
-  return { vehicles, activeVehicle, trackedVehicleName, setActiveVehicle, trackActiveVehicle, untrackVehicle, toggleActiveVehicleTrack }
+  return { vehicles, activeVehicle, trackedVehicleName, addDataListener, setActiveVehicle, trackActiveVehicle, untrackVehicle, toggleActiveVehicleTrack }
 })
