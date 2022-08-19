@@ -25,7 +25,6 @@ export interface VehicleState {
   stateOfCharge: number,
   latitude: number,
   longitude: number,
-  //history: HistoryPoint[]
   historyPoint?: HistoryPoint
 }
 
@@ -48,17 +47,6 @@ const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 let nextColorIndex = 0
 
 export const useDataStore = defineStore("data", () => {
-  // const latestTime = ref(0)
-  // const energy = ref(0)
-  // const odometer = ref(0)
-  // const speed = ref(0)
-  // const stateOfCharge = ref(0)
-  // const latitude = ref(0)
-  // const longitude = ref(0)
-  // const historyTimestamps = ref([] as number[])
-  // const speedHistory = ref([] as number[])
-  // const stateOfChargeHistory = ref([] as number[])
-
 
   const vehicles = ref([] as Vehicle[])
   const activeVehicle = ref(null as null | Vehicle)
@@ -83,12 +71,6 @@ export const useDataStore = defineStore("data", () => {
   }
 
   function flushBuffer(buffer: VehicleBuffer, state: VehicleState) {
-    /*let itemsToRemove = 0
-    while (itemsToRemove + 1 < state.history.length && state.history[itemsToRemove + 1].timestamp < +buffer.timestamp - HISTORY_TIME_WINDOW_MS)
-      itemsToRemove++
-    if (itemsToRemove) {
-      state.history.splice(0, itemsToRemove)      
-    }*/
     const avgSpeed = buffer.speed.reduce((prev, current) => prev + current) / buffer.speed.length
     const avgStateOfCharge = buffer.stateOfCharge.reduce((prev, current) => prev + current) / buffer.stateOfCharge.length
     //state.history.push({timestamp: +buffer.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge})
@@ -148,7 +130,6 @@ export const useDataStore = defineStore("data", () => {
 
     // check if we need to flush the history buffer
     if (vehicleBuffer.timestamp != 0 && Math.round(vehicleBuffer.timestamp / 5000) != Math.round(+dataPoint.time / 5000)) {
-      //console.log("Flushing buffer for ", dataPoint.vehicleName)
       flushBuffer(vehicleBuffer, vehicleState)
     }
 
