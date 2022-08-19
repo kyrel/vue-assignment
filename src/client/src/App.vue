@@ -4,7 +4,7 @@ import ViriBar from './components/ViriBar.vue'
 import ViriMap from './components/ViriMap.vue'
 
 import ViriTimeChart from './components/ViriTimeChart.vue'
-import { computed, nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import colorPool from '@/colorPool'
 import { storeToRefs } from 'pinia';
 
@@ -23,7 +23,6 @@ const watchedVehicleNames = [] as string[]
 
 function processChange(vehicleName: string, colorIndex: number, historyPoint?: HistoryPoint) {
   if (!historyPoint) return
-  //console.log("processChange")
   speedChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.speed)
   stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
 }
@@ -63,19 +62,6 @@ async function setActiveVehicle(vehicleName: string) {
   await nextTick()
   showDetails.value = true
 }
-
-// const speedData = computed(() => dataStore.vehicles.map(v => ({
-//   datasetName: v.vehicleName,
-//   colorIndex: v.colorIndex,
-//   data: v.state.history.map(h => ({ x: h.timestamp, y: h.speed }))
-// })))
-
-// const stateOfChargeData = computed(() => dataStore.vehicles.map(v => ({
-//   datasetName: v.vehicleName,
-//   colorIndex: v.colorIndex,
-//   data: v.state.history.map(h => ({ x: h.timestamp, y: h.stateOfCharge }))
-// })))
-
 </script>
 
 <template>
@@ -135,9 +121,6 @@ async function setActiveVehicle(vehicleName: string) {
       </div>
     </div>
     <div class="dashboard__row dashboard__row--chart">
-      <!-- <ViriChart
-        :timestamps="[new Date(2022, 10, 11).getTime(), new Date(2022, 10, 12).getTime(), new Date(2022, 10, 13).getTime(), new Date(2022, 10, 14).getTime(), new Date(2022, 10, 15).getTime(), new Date(2022, 10, 16).getTime()]"
-        :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">Speed profile</label>
         <ViriTimeChart :max="60" :max-grow-step="10" y-axis-title="Speed, km/h" ref="speedChart"
@@ -145,9 +128,6 @@ async function setActiveVehicle(vehicleName: string) {
       </div>
     </div>
     <div class="dashboard__row dashboard__row--chart">
-      <!-- <ViriChart
-        :timestamps="[new Date(2022, 10, 11).getTime(), new Date(2022, 10, 12).getTime(), new Date(2022, 10, 13).getTime(), new Date(2022, 10, 14).getTime(), new Date(2022, 10, 15).getTime(), new Date(2022, 10, 16).getTime()]"
-        :data="[12, 19, 3, 5, 2, 3]" /> -->
       <div class="dashboard__chart-item">
         <label class="dashboard__item-label">State of charge profile</label>
         <ViriTimeChart :max="100" :max-grow-step="10" y-axis-title="State of charge, %" ref="stateOfChargeChart"
@@ -262,11 +242,6 @@ async function setActiveVehicle(vehicleName: string) {
     row-gap: 10px;
   }
 }
-
-/* .dashboard__row--chart {
-  height: 300px;
-} */
-
 .dashboard__row--items {
   column-gap: 0;
 }
@@ -289,9 +264,6 @@ async function setActiveVehicle(vehicleName: string) {
   font-weight: 700;
 }
 
-/* .dashboard__vehicle-switch--active {
-  border-width: 4px;
-} */
 
 @media(max-width: 1023px) {
   .dashboard__row {

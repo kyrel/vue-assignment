@@ -8,13 +8,9 @@ import {
     SubTitle
 } from 'chart.js';
 import 'chartjs-adapter-date-fns'
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-
-const CHART_UPDATE_THROTTLE_MS = 500
-const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps<{
-    //datasets: { datasetName: string, colorIndex: number, data: { x: number, y: number }[] }[],
     max: number,
     maxGrowStep: number,
     timeWindowMs: number,
@@ -27,101 +23,12 @@ Chart.register(LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScal
 
 const canvas = ref(null as null | HTMLCanvasElement)
 
-// let shallUpdate = true
-
-// watch(() => props.datasets, (datasets) => {
-//     if (!chart) return
-//     let maxX = 0
-//     for (let propsDs of datasets) {
-//         let chartDs = chart.data.datasets.find(ds => ds.label == propsDs.datasetName)
-//         if (!chartDs) {
-//             chart.data.datasets.push({
-//                 label: propsDs.datasetName,
-//                 data: [],
-//                 borderWidth: 3,
-//                 borderColor: colorPool[propsDs.colorIndex].color,
-//                 pointRadius: 0,
-//                 pointHitRadius: 5,
-//                 cubicInterpolationMode: "monotone",
-//                 parsing: false
-//             })
-//             chartDs = chart.data.datasets[chart.data.datasets.length - 1]
-//         }
-//         //some timestamps may no longer be present on props
-//         if (propsDs.data.length == 0) {
-//             if (chartDs.data.length != 0) chartDs.data = []
-//         }
-//         else {
-//             let lengthToChop = 0
-//             while (lengthToChop < chartDs.data.length && chartDs.data[lengthToChop].x != propsDs.data[0].x) {
-//                 lengthToChop++
-//             }
-//             if (lengthToChop) {
-//                 //chart.data.labels!.splice(0, lengthToChop)
-//                 chartDs.data.splice(0, lengthToChop)
-//             }
-//         }
-//         //some timestamps may be completely new    
-//         /*let newDataIndex = 0
-//         while (newDataIndex < chart.data.labels!.length && newDataIndex < timestamps.length && chart.data.labels![newDataIndex] == timestamps[newDataIndex]) {
-//             newDataIndex++
-//         } */
-//         const currentLength = chartDs.data.length
-//         if (propsDs.data.length > currentLength) {
-//             //chart.data.labels!.push(...timestamps.slice(currentLength))
-//             const dataAdded = propsDs.data.slice(currentLength)
-//             const maxValue = dataAdded.reduce((prevMax, item) => item.y > prevMax ? item.y : prevMax, 0)
-//             chartDs.data.push(...dataAdded)
-//             const currentScaleMax = +chart.options.scales!["y"]!.max!
-//             if (maxValue > currentScaleMax) {
-//                 const delta = maxValue - currentScaleMax
-//                 const steps = Math.floor(delta / props.maxGrowStep) + 1
-//                 chart.options.scales!["y"]!.max = currentScaleMax + steps * props.maxGrowStep
-//             }
-//         }
-//         if (chartDs.data.length > 0 && chartDs.data[chartDs.data.length - 1].x > maxX) maxX = chartDs.data[chartDs.data.length - 1].x
-//     }
-
-//     chart.options.scales!["x"]!.max = maxX
-//     chart.options.scales!["x"]!.min = maxX - props.timeWindowMs
-
-//     //if (!shallUpdate) return
-//     setTimeout(() => { shallUpdate = true; }, CHART_UPDATE_THROTTLE_MS)
-//     shallUpdate = false
-//     //if (chart!.options.animations .duration! == 0)
-//     //if (chart!.options.animations!.x?.duration == undefined)
-//     //setTimeout(() => { chart!.options.animations!.x = { duration: undefined } }, 0)
-//     chart.update()
-// }, { deep: true })
-
 onMounted(() => {
     const ctx = canvas.value!.getContext("2d")!
     chart = new Chart(ctx, {
         type: 'line',
         data: {
-            //labels: [...props.timestamps],
-            datasets: []/*props.datasets.map(ds => ({
-                label: ds.datasetName,
-                data: [...ds.data],
-                borderWidth: 3,
-                borderColor: colorPool[ds.colorIndex].color,
-                pointRadius: 0,
-                pointHitRadius: 5,
-                cubicInterpolationMode: "monotone",
-                parsing: false
-            }))*/,
-
-            /*[{
-                label: 'Vehicle #1',
-                data: [...props.data],
-                borderWidth: 3,
-                borderColor: "#b5e9cb",
-                pointRadius: 0,
-                pointHitRadius: 5,
-                cubicInterpolationMode: "monotone",
-                parsing: false
-                //pointStyle: 
-            }]*/
+            datasets: []
         },
         options: {
             responsive: true,

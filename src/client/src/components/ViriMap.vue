@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { YandexMap, YandexMarker } from 'vue-yandex-maps'
-import { ref, watch } from 'vue';
+import { watch } from 'vue';
 import type { MapSettings } from 'vue-yandex-maps/dist/types';
 
 const props = defineProps<{
@@ -38,33 +38,14 @@ watch(() => props.markers, (markers) => {
   //add markers that are not here (BUT HOW)
   //set marker coords
   for (let propMarker of markers) {
-    /*console.log("Got marker in props:")
-    console.log(propMarker)
-    console.log("local markers are")
-    console.log(markerRefs)*/
-
     const markerRef = markerRefs.find(m => m.id == propMarker.id)
     if (!markerRef) return
     (markerRef.marker as any).geometry.setCoordinates([propMarker.latitude, propMarker.longitude])
     if (props.trackMarkerId == propMarker.id) {
-      //console.log(map.getZoom())
-
       if (!map.action.getCurrentState().isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], map.action.getCurrentState().zoom)
-
-      //map.setZoom([propMarker.latitude, propMarker.longitude])
     }
   }
 }, { deep: true })
-
-// watch(() => [props.latitude, props.longitude], ([lat, long]) => {
-//   if (marker.value) {
-//     (marker.value as any).geometry.setCoordinates([lat, long])
-//   }
-//     // TODO: this is how we can track map but do we need it?
-//   // if (map) {
-//   //   map.setCenter([lat, long])
-//   // }
-// })
 
 function mapCreated(ymap: any) {
   map = ymap
@@ -80,8 +61,6 @@ function jumpTo(markerId: string) {
   }
 }
 
-const container = ref(null as null | HTMLElement)
-
 defineExpose({ jumpTo })
 
 function markerClick(ev: any) {
@@ -92,21 +71,14 @@ function markerClick(ev: any) {
 
 <template>
   <div class="map">
-    <div class="map__ymap-wrapper" ref="container">
+    <div class="map__ymap-wrapper">
       <YandexMap :settings="yandexMapSettings" :coordinates="[latitude, longitude]" @created="mapCreated">
         <YandexMarker v-for="marker of markers" :coordinates="[marker.latitude, marker.longitude]" @click="markerClick"
           :marker-id="marker.id" :properties="{ hintContent: marker.id }" :options="{ preset: marker.preset }"
-          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">
-          <!-- <template #component>
-        <CustomBalloon v-model="name" />
-      </template> -->
+          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">        
         </YandexMarker>
       </YandexMap>
     </div>
-    <!-- <div class="map__controls">
-      <label class="map__controls-label">Jump to:</label>
-      <button @click="jumpTo">Vehicle #1</button>
-    </div> -->
   </div>
 </template>
 
@@ -119,12 +91,6 @@ function markerClick(ev: any) {
   max-height: 100%;
 }
 
-
-/*@media (max-width: 480px) {
-  .yandex-container {
-    height: 250px;
-  }
-} */
 </style>
 
 <style scoped>
@@ -138,13 +104,4 @@ function markerClick(ev: any) {
     height: 250px;
   }
 }
-
-/* .map__controls {
-  margin-top: 4px;
-}
-
-.map__controls-label {
-  display: inline-block;
-  font-weight: 700;
-} */
 </style>
