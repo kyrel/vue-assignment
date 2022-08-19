@@ -11,8 +11,9 @@ const props = defineProps<{
     id: string,
     latitude: number,
     longitude: number,
-    preset: string
+    ymapColor: string
   }[],
+  selectedMarkerId: string | null
   trackMarkerId: string | null
 }>()
 
@@ -33,7 +34,7 @@ function storeMarkerRef(id: string, component: InstanceType<typeof YandexMarker>
   markerRefs.push({ id, marker: component })
 }
 
-watch(() => props.markers, (markers) => {
+watch([() => props.markers, () => props.selectedMarkerId], ([markers, selectedMarkerId]) => {
   //remove markers that are no longer in props
   //add markers that are not here (BUT HOW)
   //set marker coords
@@ -41,6 +42,16 @@ watch(() => props.markers, (markers) => {
     const markerRef = markerRefs.find(m => m.id == propMarker.id)
     if (!markerRef) return
     (markerRef.marker as any).geometry.setCoordinates([propMarker.latitude, propMarker.longitude])
+    
+    if (selectedMarkerId == propMarker.id) {
+      (markerRef.marker as any).options.set({ preset: `islands#${propMarker.ymapColor}DotIcon` })
+      //console.log(markerRef.marker)
+      //      (markerRef.marker as any).geometry.setCoordinates([propMarker.latitude, propMarker.longitude])
+    }
+    else {
+      (markerRef.marker as any).options.set({ preset: `islands#${propMarker.ymapColor}Icon` })
+    }
+
     if (props.trackMarkerId == propMarker.id) {
       if (!map.action.getCurrentState().isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], map.action.getCurrentState().zoom)
     }
@@ -50,7 +61,6 @@ watch(() => props.markers, (markers) => {
 function mapCreated(ymap: any) {
   map = ymap
   map.setZoom(13)
-  //map.options.set("autoFitToViewport", true) 
 }
 
 function jumpTo(markerId: string) {
@@ -74,8 +84,9 @@ function markerClick(ev: any) {
     <div class="map__ymap-wrapper">
       <YandexMap :settings="yandexMapSettings" :coordinates="[latitude, longitude]" @created="mapCreated">
         <YandexMarker v-for="marker of markers" :coordinates="[marker.latitude, marker.longitude]" @click="markerClick"
-          :marker-id="marker.id" :properties="{ hintContent: marker.id }" :options="{ preset: marker.preset }"
-          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">        
+          :marker-id="marker.id" :properties="{ hintContent: marker.id }"
+          :options="{ preset: `islands#${marker.ymapColor}Icon` }"
+          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">
         </YandexMarker>
       </YandexMap>
     </div>

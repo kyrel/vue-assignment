@@ -70,7 +70,8 @@ async function setActiveVehicle(vehicleName: string) {
       <div class="dashboard__map">
         <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
           :longitude="dataStore.activeVehicle.state.longitude"
-          :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, preset: colorPool[v.colorIndex].ymapPreset }))"
+          :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, ymapColor: colorPool[v.colorIndex].ymapColor }))"
+          :selected-marker-id="dataStore.activeVehicle?.vehicleName ||  null"
           :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
       </div>
       <div class="dashboard__column dashboard__selector-and-details">

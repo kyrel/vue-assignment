@@ -1,5 +1,5 @@
 export default [
-    { color: '#007bff', ymapPreset: 'islands#blueIcon'},
-    { color: '#6c757d', ymapPreset: 'islands#grayIcon' },
-    { color: '#28a745', ymapPreset: 'islands#darkGreenIcon' }    
+    { color: '#007bff', ymapColor: 'blue'},
+    { color: '#6c757d', ymapColor: 'gray' },
+    { color: '#28a745', ymapColor: 'darkGreen' }    
 ]
