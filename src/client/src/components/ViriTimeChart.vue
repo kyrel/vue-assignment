@@ -136,7 +136,7 @@ onMounted(() => {
                 x: {
                     type: 'time',
                     ticks: {
-                        autoSkip: true,
+                        autoSkip: true,                        
                         maxTicksLimit: 20,
                         minRotation: 50,
                         maxRotation: 50,

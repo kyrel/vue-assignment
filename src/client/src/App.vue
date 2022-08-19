@@ -16,29 +16,6 @@ function speedPercentage(val: number) {
   if (val > max) return 100
   return val * 100 / max
 }
-
-// const speedChartOptions = {
-//   scales: {
-//     x: {
-//       type: 'time',
-//       time: {
-//         // Luxon format string
-//         tooltipFormat: 'DD T'
-//       },
-//       title: {
-//         display: true,
-//         text: 'Date'
-//       }
-//     },
-//     y: {
-//       title: {
-//         display: true,
-//         text: 'speed'
-//       }
-//     }
-//   }
-// }
-
 const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
@@ -108,7 +85,7 @@ async function setActiveVehicle(vehicleName: string) {
         <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
           :longitude="dataStore.activeVehicle.state.longitude"
           :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, preset: colorPool[v.colorIndex].ymapPreset }))"
-          :track-marker-id="dataStore.trackedVehicleName" />
+          :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
       </div>
       <div class="dashboard__column dashboard__column--bars">
         <div class="dashboard__row dashboard__vehicle-buttons">
@@ -269,9 +246,9 @@ async function setActiveVehicle(vehicleName: string) {
   width: 380px;
 }
 
-.dashboard__column--map :deep(.yandex-container) {
+/* .dashboard__column--map :deep(.yandex-container) {
   height: 100%;
-}
+} */
 
 .dashboard__row {
   display: flex;

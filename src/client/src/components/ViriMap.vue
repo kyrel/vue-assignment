@@ -1,7 +1,8 @@
 <script setup lang="ts">
 
 import { YandexMap, YandexMarker } from 'vue-yandex-maps'
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
+import type { MapSettings } from 'vue-yandex-maps/dist/types';
 
 const props = defineProps<{
   latitude: number,
@@ -15,7 +16,9 @@ const props = defineProps<{
   trackMarkerId: string | null
 }>()
 
-const yandexMapSettings = {
+const emits = defineEmits(["markerClick"])
+
+const yandexMapSettings: MapSettings = {
   apiKey: '680bf2a4-9435-46be-99c5-be6e47b8d00f',
   lang: 'en_RU'
 }
@@ -66,6 +69,7 @@ watch(() => props.markers, (markers) => {
 function mapCreated(ymap: any) {
   map = ymap
   map.setZoom(13)
+  //map.options.set("autoFitToViewport", true) 
 }
 
 function jumpTo(markerId: string) {
@@ -76,15 +80,21 @@ function jumpTo(markerId: string) {
   }
 }
 
+const container = ref(null as null | HTMLElement)
+
 defineExpose({ jumpTo })
+
+function markerClick(ev: any) {
+  emits("markerClick", ev.originalEvent.target.properties._data.markerId)
+}
 
 </script>
 
 <template>
   <div class="map">
-    <div class="map__ymap-wrapper">
+    <div class="map__ymap-wrapper" ref="container">
       <YandexMap :settings="yandexMapSettings" :coordinates="[latitude, longitude]" @created="mapCreated">
-        <YandexMarker v-for="marker of markers" :coordinates="[marker.latitude, marker.longitude]"
+        <YandexMarker v-for="marker of markers" :coordinates="[marker.latitude, marker.longitude]" @click="markerClick"
           :marker-id="marker.id" :properties="{ hintContent: marker.id }" :options="{ preset: marker.preset }"
           :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">
           <!-- <template #component>
@@ -100,6 +110,23 @@ defineExpose({ jumpTo })
   </div>
 </template>
 
+<style>
+.yandex-container {
+  height: 100%;
+}
+
+.yandex-container>div {
+  max-height: 100%;
+}
+
+
+/*@media (max-width: 480px) {
+  .yandex-container {
+    height: 250px;
+  }
+} */
+</style>
+
 <style scoped>
 .map__ymap-wrapper {
   height: 300px;
@@ -108,8 +135,8 @@ defineExpose({ jumpTo })
 
 @media (max-width: 480px) {
   .map__ymap-wrapper {
-      height: 250px;
-    }
+    height: 250px;
+  }
 }
 
 /* .map__controls {
