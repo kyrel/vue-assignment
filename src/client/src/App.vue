@@ -6,7 +6,7 @@ import ViriMap from './components/ViriMap.vue'
 import ViriTimeChart from './components/ViriTimeChart.vue'
 import { nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
-import '@/assets/color-coding.css'
+import '@/assets/color-coding.scss'
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
