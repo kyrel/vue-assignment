@@ -44,7 +44,7 @@ async function setActiveVehicle(vehicleName: string) {
 </script>
 
 <template>
-    <main class="dashboard__column" v-if="dataStore.activeVehicle">
+    <main class="dashboard" v-if="dataStore.activeVehicle">
         <div class="dashboard__map-and-details">
             <div class="dashboard__map">
                 <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
@@ -53,7 +53,7 @@ async function setActiveVehicle(vehicleName: string) {
                     :selected-marker-id="dataStore.activeVehicle?.vehicleName || null"
                     :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
             </div>
-            <div class="dashboard__column dashboard__details">
+            <div class="dashboard__details-with-selector">
                 <div class="dashboard__vehicle-selector">
                     <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName"
                         @click="setActiveVehicle(vehicle.vehicleName)"
@@ -63,8 +63,8 @@ async function setActiveVehicle(vehicleName: string) {
                     </button>
                 </div>
                 <Transition name="ease-in-out-" mode="out-in">
-                    <div v-if="showDetails" class="dashboard__column">
-                        <div class="dashboard__bar-item dashboard__vehicle-map-controls">
+                    <div v-if="showDetails" class="dashboard__details">
+                        <div class="dashboard__vehicle-map-controls">
                             <button @click="jumpToActiveVehicle">Jump to vehicle locaiton</button>
                             <label>
                                 <input type="checkbox"
@@ -72,12 +72,12 @@ async function setActiveVehicle(vehicleName: string) {
                                     @change="dataStore.toggleActiveVehicleTrack()"> Track vehicle on map
                             </label>
                         </div>
-                        <div class="dashboard__bar-item">
+                        <div>
                             <label class="dashboard__item-label">Current Speed</label>
                             <ViriBar :percentage-full="speedPercentage(dataStore.activeVehicle.state.speed)"
                                 :label="`${dataStore.activeVehicle.state.speed.toFixed(1)}&nbsp;km/h`" />
                         </div>
-                        <div class="dashboard__bar-item">
+                        <div>
                             <label class="dashboard__item-label">State of charge</label>
                             <ViriBar :percentage-full="dataStore.activeVehicle.state.stateOfCharge"
                                 :label="`${dataStore.activeVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
@@ -109,89 +109,96 @@ async function setActiveVehicle(vehicleName: string) {
     </main>
 </template>
 
-<style scoped>
-.ease-in-out--enter-active,
-.ease-in-out--leave-active {
-    transition: opacity 0.128s ease;
+<style scoped lang="scss">
+/* @define ease-in-out */
+.ease-in-out {
+    &--enter-active,
+    &--leave-active {
+        transition: opacity 0.128s ease;
+    }
+
+    &--enter-from,
+    &--leave-to {
+        opacity: 0;
+    }
 }
 
-.ease-in-out--enter-from,
-.ease-in-out--leave-to {
-    opacity: 0;
-}
-
-.dashboard__column {
+@mixin flex-column {
     display: flex;
     flex-direction: column;
     row-gap: 20px;
 }
 
-.dashboard__vehicle-selector {
-    border-bottom: 1px solid #bdbdbd;
-    padding-bottom: 4px;
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 10px;
-    row-gap: 10px;
-}
+/* @define dashboard */
+.dashboard {
+    @include flex-column;
 
-.dashboard__vehicle-map-controls {
-    display: flex;
-    column-gap: 12px;
-    flex-flow: row wrap;
-}
-
-.dashboard__vehicle-button {
-    border-radius: 4px;
-    cursor: pointer;
-    padding: .375rem .75rem;
-}
-
-
-
-.dashboard__map {
-    width: 496px;
-}
-
-.dashboard__details {
-    width: 380px;
-}
-
-.dashboard__map-and-details {
-    display: flex;
-    flex-flow: row wrap;
-    column-gap: 20px;
-    row-gap: 10px;
-}
-
-.dashboard__plain-values {
-    display: flex;
-    flex-flow: row wrap;
-    row-gap: 10px;
-}
-
-.dashboard__bar-item {
-    flex-grow: 1;
-}
-
-.dashboard__plain-value-item {
-    flex: 1;
-}
-
-.dashboard__item-label {
-    display: block;
-    margin-bottom: 4px;
-    font-weight: 700;
-}
-
-
-@media(max-width: 1023px) {
-    .dashboard__map {
-        width: 100%;
+    &__map-and-details {
+        display: flex;
+        flex-flow: row wrap;
+        column-gap: 20px;
+        row-gap: 10px;
     }
 
-    .dashboard__details {
-        width: 100%;
+    &__map {
+        width: 496px;
+    }
+
+    &__details-with-selector {
+        @include flex-column;
+
+        width: 380px;
+    }
+
+    @media (max-width: 1023px) {
+        &__map {
+            width: 100%;
+        }
+
+        &__details-with-selector {
+            width: 100%;
+        }
+    }
+
+    &__vehicle-selector {
+        border-bottom: 1px solid #bdbdbd;
+        padding-bottom: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 10px;
+    }
+
+    &__vehicle-button {
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0.375rem 0.75rem;
+    }
+
+    &__details {
+        @include flex-column;
+    }
+
+    &__vehicle-map-controls {
+        display: flex;
+        flex-flow: row wrap;
+        column-gap: 12px;
+    }
+
+    &__plain-values {
+        display: flex;
+        flex-flow: row wrap;
+        row-gap: 10px;
+    }
+
+    &__plain-value-item {
+        flex: 1;
+    }
+
+    &__item-label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 700;
     }
 }
 </style>
