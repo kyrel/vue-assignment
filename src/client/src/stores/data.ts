@@ -39,7 +39,7 @@ export interface Vehicle {
 }
 
 class VehicleBuffer {
-  timestamp: number = 0
+  timestamp = 0
   speed: number[] = []
   stateOfCharge: number[] = []
 

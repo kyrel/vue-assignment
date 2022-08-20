@@ -4,6 +4,14 @@ import { YandexMap, YandexMarker } from 'vue-yandex-maps'
 import { watch } from 'vue';
 import type { MapSettings } from 'vue-yandex-maps/dist/types';
 
+import type ymaps from 'yandex-maps'
+/*declare global {
+  const ymaps: typeof ymapsNamespace;
+  interface Window {
+    ymaps: typeof ymapsNamespace;
+  }
+}*/
+
 const props = defineProps<{
   latitude: number,
   longitude: number,
@@ -25,40 +33,40 @@ const yandexMapSettings: MapSettings = {
 }
 
 //const marker = ref<InstanceType<typeof YandexMarker> | null>(null)
-let map: any | null = null;
-const markerRefs = [] as { id: string, marker: InstanceType<typeof YandexMarker> }[]
+let map: ymaps.Map | null = null;
+const markerRefs = [] as { id: string, marker: InstanceType<typeof YandexMarker> & ymaps.Placemark }[]
 
-function storeMarkerRef(id: string, component: InstanceType<typeof YandexMarker>) {
+function storeMarkerRef(id: string, component: InstanceType<typeof YandexMarker> & ymaps.Placemark) {
   const existingIndex = markerRefs.findIndex(m => m.id == id)
   if (existingIndex >= 0) markerRefs.splice(existingIndex, 1)
   markerRefs.push({ id, marker: component })
 }
 
 watch([() => props.markers, () => props.selectedMarkerId], ([markers, selectedMarkerId]) => {
+  if (!map) return
   //remove markers that are no longer in props
   //add markers that are not here (BUT HOW)
   //set marker coords
-  for (let propMarker of markers) {
+  for (const propMarker of markers) {
     const markerRef = markerRefs.find(m => m.id == propMarker.id)
     if (!markerRef) return
-    (markerRef.marker as any).geometry.setCoordinates([propMarker.latitude, propMarker.longitude])
-    
+    markerRef.marker.geometry?.setCoordinates([propMarker.latitude, propMarker.longitude])
+
     if (selectedMarkerId == propMarker.id) {
-      (markerRef.marker as any).options.set({ preset: `islands#${propMarker.ymapColor}DotIcon` })
-      //console.log(markerRef.marker)
-      //      (markerRef.marker as any).geometry.setCoordinates([propMarker.latitude, propMarker.longitude])
+      markerRef.marker.options.set({ preset: `islands#${propMarker.ymapColor}DotIcon` })
     }
     else {
-      (markerRef.marker as any).options.set({ preset: `islands#${propMarker.ymapColor}Icon` })
+      markerRef.marker.options.set({ preset: `islands#${propMarker.ymapColor}Icon` })
     }
 
     if (props.trackMarkerId == propMarker.id) {
-      if (!map.action.getCurrentState().isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], map.action.getCurrentState().zoom)
+      const state = map.action.getCurrentState() as { isTicking: boolean, zoom: number }
+      if (!state.isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], state.zoom)
     }
   }
 }, { deep: true })
 
-function mapCreated(ymap: any) {
+function mapCreated(ymap: ymaps.Map) {
   map = ymap
   map.setZoom(13)
 }
@@ -73,6 +81,7 @@ function jumpTo(markerId: string) {
 
 defineExpose({ jumpTo })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function markerClick(ev: any) {
   emits("markerClick", ev.originalEvent.target.properties._data.markerId)
 }
@@ -83,10 +92,10 @@ function markerClick(ev: any) {
   <div class="map">
     <div class="map__ymap-wrapper">
       <YandexMap :settings="yandexMapSettings" :coordinates="[latitude, longitude]" @created="mapCreated">
-        <YandexMarker v-for="marker of markers" :coordinates="[marker.latitude, marker.longitude]" @click="markerClick"
-          :marker-id="marker.id" :properties="{ hintContent: marker.id }"
+        <YandexMarker v-for="marker of markers" :key="marker.id" :coordinates="[marker.latitude, marker.longitude]"
+          @click="markerClick" :marker-id="marker.id" :properties="{ hintContent: marker.id }"
           :options="{ preset: `islands#${marker.ymapColor}Icon` }"
-          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker>)">
+          :ref="(el) => storeMarkerRef(marker.id, el as InstanceType<typeof YandexMarker> & ymaps.Placemark)">
         </YandexMarker>
       </YandexMap>
     </div>
@@ -101,7 +110,6 @@ function markerClick(ev: any) {
 .yandex-container>div {
   max-height: 100%;
 }
-
 </style>
 
 <style scoped>

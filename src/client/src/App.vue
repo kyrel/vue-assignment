@@ -52,7 +52,7 @@ async function setActiveVehicle(vehicleName: string) {
       </div>
       <div class="dashboard__column dashboard__selector-and-details">
         <div class="dashboard__vehicle-selector">
-          <button v-for="vehicle of dataStore.vehicles" @click="setActiveVehicle(vehicle.vehicleName)"
+          <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName" @click="setActiveVehicle(vehicle.vehicleName)"
             class="color-coded-button"
             :class="[{ 'color-coded-button--active': vehicle == dataStore.activeVehicle }, 'color-coded-button--' + vehicle.colorIndex]">
             {{ vehicle.vehicleName }}
