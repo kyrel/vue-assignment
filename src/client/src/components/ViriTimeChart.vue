@@ -114,16 +114,10 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             lengthToChop++
         }
         if (lengthToChop) {
-            //chart.data.labels!.splice(0, lengthToChop)
             chartDs.data.splice(0, lengthToChop)
         }
     }
-
-    //some timestamps may be completely new    
-    /*let newDataIndex = 0
-    while (newDataIndex < chart.data.labels!.length && newDataIndex < timestamps.length && chart.data.labels![newDataIndex] == timestamps[newDataIndex]) {
-        newDataIndex++
-    } */
+ 
     if (x >= (scaleX.min as number))
         chartDs.data.push({ x, y })
 
@@ -132,17 +126,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
         const delta = y - currentScaleYMax
         const steps = Math.floor(delta / props.maxGrowStep) + 1
         scaleY.max = currentScaleYMax + steps * props.maxGrowStep
-    }
-    // if (x > (chart.options.scales!["x"]!.max as number)) {
-    //     chart.options.scales!["x"]!.max = x
-    //     chart.options.scales!["x"]!.min = x - props.timeWindowMs
-    // }
-    //if (!shallUpdate) return
-    //setTimeout(() => { shallUpdate = true; }, CHART_UPDATE_THROTTLE_MS)
-    //shallUpdate = false
-    //if (chart!.options.animations .duration! == 0)
-    //if (chart!.options.animations!.x?.duration == undefined)
-    //setTimeout(() => { chart!.options.animations!.x = { duration: undefined } }, 0)
+    }    
     chart.update()
 }
 

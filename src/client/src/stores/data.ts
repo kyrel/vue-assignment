@@ -1,3 +1,4 @@
+import VehicleDataBuffer from '@/VehicleDataBuffer'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -38,37 +39,7 @@ export interface Vehicle {
   state: VehicleState
 }
 
-class VehicleBuffer {
-  timestamp = 0
-  speed: number[] = []
-  stateOfCharge: number[] = []
-
-  reset() {
-    this.timestamp = 0
-    this.speed = []
-    this.stateOfCharge = []
-  }
-
-  flush() {
-    const avgSpeed = this.speed.reduce((prev, current) => prev + current) / this.speed.length
-    const avgStateOfCharge = this.stateOfCharge.reduce((prev, current) => prev + current) / this.stateOfCharge.length
-    const result = { timestamp: +this.timestamp, speed: avgSpeed, stateOfCharge: avgStateOfCharge }
-    this.reset()
-    return result
-  }
-
-  add(time: number, speed: number, stateOfCharge: number) {
-    if (this.timestamp != 0 && Math.round(this.timestamp / 5000) != Math.round(time / 5000)) {
-      return this.flush()
-    }
-
-    if (!this.timestamp) this.timestamp = time
-    this.speed.push(speed)
-    this.stateOfCharge.push(stateOfCharge)
-  }
-}
-
-const vehicleBuffers = {} as Record<string, VehicleBuffer>
+const vehicleBuffers = {} as Record<string, VehicleDataBuffer>
 
 let nextColorIndex = 0
 
@@ -121,7 +92,7 @@ export const useDataStore = defineStore("data", () => {
       if (nextColorIndex > 9) nextColorIndex = 0
       if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
       else vehicles.value.push(newVehicle)
-      vehicleBuffers[dataPoint.vehicleName] = new VehicleBuffer()
+      vehicleBuffers[dataPoint.vehicleName] = new VehicleDataBuffer()
       vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
     }
     const vehicle = vehicles.value[vehicleIndex]

@@ -7,7 +7,7 @@ defineProps<{
 <template>
     <div class="bar">
         <div class="bar__full" :style="{ width: `${percentageFull.toFixed(1)}%` }">
-            <div class="bar__label">
+            <div class="bar__text">
                 {{ label }}
             </div>
         </div>
@@ -29,7 +29,7 @@ defineProps<{
     transition: width 0.5s ease;
 }
 
-.bar__label {
+.bar__text {
     padding: 0 5px;
     color: #000;
 }

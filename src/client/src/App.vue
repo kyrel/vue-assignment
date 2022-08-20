@@ -6,6 +6,7 @@ import ViriMap from './components/ViriMap.vue'
 import ViriTimeChart from './components/ViriTimeChart.vue'
 import { nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
+import '@/assets/color-coding.css'
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
@@ -19,10 +20,10 @@ const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 
-dataStore.addDataHistoryListener((data)=>{
+dataStore.addDataHistoryListener((data) => {
   speedChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.speed)
   stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.stateOfCharge)
-})  
+})
 
 function jumpToActiveVehicle() {
   if (!map.value) return
@@ -44,18 +45,18 @@ async function setActiveVehicle(vehicleName: string) {
 
 <template>
   <main class="dashboard__column" v-if="dataStore.activeVehicle">
-    <div class="dashboard__row">
+    <div class="dashboard__map-and-details">
       <div class="dashboard__map">
         <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
           :longitude="dataStore.activeVehicle.state.longitude"
           :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, ymapColor: colorPool[v.colorIndex].ymapColor }))"
-          :selected-marker-id="dataStore.activeVehicle?.vehicleName ||  null"
+          :selected-marker-id="dataStore.activeVehicle?.vehicleName || null"
           :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
       </div>
-      <div class="dashboard__column dashboard__selector-and-details">
+      <div class="dashboard__column dashboard__details">
         <div class="dashboard__vehicle-selector">
-          <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName" @click="setActiveVehicle(vehicle.vehicleName)"
-            class="color-coded-button"
+          <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName"
+            @click="setActiveVehicle(vehicle.vehicleName)" class="dashboard__vehicle-button color-coded-button"
             :class="[{ 'color-coded-button--active': vehicle == dataStore.activeVehicle }, 'color-coded-button--' + vehicle.colorIndex]">
             {{ vehicle.vehicleName }}
           </button>
@@ -79,12 +80,12 @@ async function setActiveVehicle(vehicleName: string) {
               <ViriBar :percentage-full="dataStore.activeVehicle.state.stateOfCharge"
                 :label="`${dataStore.activeVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
             </div>
-            <div class="dashboard__row dashboard__row--items">
-              <div class="dashboard__value-item">
+            <div class="dashboard__plain-values">
+              <div class="dashboard__plain-value-item">
                 <label class="dashboard__item-label">Energy</label>
                 <div>{{ dataStore.activeVehicle.state.energy.toFixed(1) }} kW</div>
               </div>
-              <div class="dashboard__value-item">
+              <div class="dashboard__plain-value-item">
                 <label class="dashboard__item-label">Odometer</label>
                 <div>{{ dataStore.activeVehicle.state.odometer.toFixed(1) }} km</div>
               </div>
@@ -117,6 +118,12 @@ async function setActiveVehicle(vehicleName: string) {
   opacity: 0;
 }
 
+.dashboard__column {
+  display: flex;
+  flex-direction: column;
+  row-gap: 20px;
+}
+
 .dashboard__vehicle-selector {
   border-bottom: 1px solid #bdbdbd;
   padding-bottom: 4px;
@@ -132,88 +139,40 @@ async function setActiveVehicle(vehicleName: string) {
   flex-flow: row wrap;
 }
 
-.color-coded-button {
-  border: 1px solid transparent;
+.dashboard__vehicle-button {
   border-radius: 4px;
-  background: transparent;
   cursor: pointer;
   padding: .375rem .75rem;
-  transition: color .15s ease-in-out,
-    background-color .15s ease-in-out,
-    border-color .15s ease-in-out,
-    box-shadow .15s ease-in-out;
 }
 
 
-.color-coded-button--0 {
-  border-color: #007bff;
-  color: #007bff;
-}
-
-.color-coded-button--0:hover,
-.color-coded-button--0.color-coded-button--active {
-  color: #fff;
-  background-color: #007bff;
-}
-
-.color-coded-button--1 {
-  border-color: #6c757d;
-  color: #6c757d;
-}
-
-.color-coded-button--1:hover,
-.color-coded-button--1.color-coded-button--active {
-  color: #fff;
-  background-color: #6c757d;
-}
-
-.color-coded-button--2 {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.color-coded-button--2:hover,
-.color-coded-button--2.color-coded-button--active {
-  color: #fff;
-  background-color: #28a745;
-}
-
-.dashboard__column {
-  display: flex;
-  flex-direction: column;
-  row-gap: 20px;
-}
 
 .dashboard__map {
   width: 496px;
 }
 
-.dashboard__selector-and-details {
+.dashboard__details {
   width: 380px;
 }
 
-.dashboard__row {
+.dashboard__map-and-details {
   display: flex;
+  flex-flow: row wrap;
   column-gap: 20px;
-  row-gap: 20px;
+  row-gap: 10px;
 }
 
-@media (max-width: 1024px) {
-  .dashboard__row {
-    column-gap: 10px;
-    row-gap: 10px;
-  }
-}
-
-.dashboard__row--items {
-  column-gap: 0;
+.dashboard__plain-values {
+  display: flex;
+  flex-flow: row wrap;
+  row-gap: 10px;
 }
 
 .dashboard__bar-item {
   flex-grow: 1;
 }
 
-.dashboard__value-item {
+.dashboard__plain-value-item {
   flex: 1;
 }
 
@@ -225,15 +184,11 @@ async function setActiveVehicle(vehicleName: string) {
 
 
 @media(max-width: 1023px) {
-  .dashboard__row {
-    flex-flow: row wrap;
-  }
-
   .dashboard__map {
     width: 100%;
   }
 
-  .dashboard__selector-and-details {
+  .dashboard__details {
     width: 100%;
   }
 }
