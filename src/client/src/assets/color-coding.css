@@ -1,12 +1,13 @@
+/* @define color-coded-button */
 .color-coded-button {
     border: 1px solid transparent;
-    background: transparent;    
-    transition: color .15s ease-in-out,
-        background-color .15s ease-in-out,
-        border-color .15s ease-in-out,
-        box-shadow .15s ease-in-out;
+    background: transparent;
+    transition:
+        color 0.15s ease-in-out,
+        background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 }
-
 
 .color-coded-button--0 {
     border-color: #007bff;
