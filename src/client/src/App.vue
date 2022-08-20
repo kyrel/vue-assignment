@@ -19,7 +19,7 @@ const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 
-dataStore.addDataListener((data)=>{
+dataStore.addDataHistoryListener((data)=>{
   speedChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.speed)
   stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.stateOfCharge)
 })  

@@ -137,7 +137,7 @@ export const useDataStore = defineStore("data", () => {
     // we won't process data from the past
     // TODO: still process it if it falls nicely in the buffer
     if (+dataPoint.time < vehicleState.latestTime) return
-    
+
     // set the current state
     vehicleState.energy = +dataPoint.energy
     vehicleState.odometer = +dataPoint.odo
@@ -155,7 +155,7 @@ export const useDataStore = defineStore("data", () => {
     vehicleState.latestTime = +dataPoint.time
   }
 
-  function addDataListener(listener: (historyData: HistoryData) => void) {
+  function addDataHistoryListener(listener: (historyData: HistoryData) => void) {
     history.addEventListener("data", (e) => listener((e as CustomEvent).detail))
   }
 
@@ -165,5 +165,5 @@ export const useDataStore = defineStore("data", () => {
     processDataPoint(data)
   }
 
-  return { vehicles, activeVehicle, trackedVehicleName, addDataListener, setActiveVehicle, trackActiveVehicle, untrackVehicle, toggleActiveVehicleTrack }
+  return { vehicles, activeVehicle, trackedVehicleName, addDataHistoryListener, setActiveVehicle, trackActiveVehicle, untrackVehicle, toggleActiveVehicleTrack }
 })

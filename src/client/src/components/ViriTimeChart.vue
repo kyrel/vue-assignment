@@ -5,7 +5,7 @@ import {
     TimeSeriesScale, LineController, CategoryScale, Legend,
     Title,
     Tooltip,
-    SubTitle
+    SubTitle,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns'
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -43,7 +43,6 @@ onMounted(() => {
                 x: {
                     type: 'time',
                     ticks: {
-                        autoSkip: true,                        
                         maxTicksLimit: 20,
                         minRotation: 50,
                         maxRotation: 50,
@@ -62,14 +61,14 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-
+    chart?.destroy()
 })
 
 function addDataPoint(datasetName: string, colorIndex: number, x: number, y: number) {
     if (!chart) return
     let chartDs = chart.data.datasets.find(ds => ds.label == datasetName)
     if (!chartDs) {
-        chart.data.datasets.push({
+        chartDs = {
             label: datasetName,
             data: [],
             borderWidth: 3,
@@ -78,8 +77,14 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             pointHitRadius: 5,
             cubicInterpolationMode: "monotone",
             parsing: false
-        })
-        chartDs = chart.data.datasets[chart.data.datasets.length - 1]
+        }
+        const indexToInsert = chart.data.datasets.findIndex(d => (d.label||"").localeCompare(datasetName) > 0)
+        if (indexToInsert >= 0) {
+            chart.data.datasets.splice(indexToInsert, 0, chartDs)            
+        }
+        else {
+            chart.data.datasets.push(chartDs)                    
+        }                
     }
     if (x > (chart.options.scales!["x"]!.max as number)) {
         chart.options.scales!["x"]!.max = x
