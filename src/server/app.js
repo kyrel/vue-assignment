@@ -36,7 +36,9 @@ for (let broadcaster of broadcasters) {
 	broadcaster.on("data", (data) => {
 		// Send data to all connected clients on websocket
 		wss.clients.forEach((socket) => {
-			socket.send(JSON.stringify({vehicleName: broadcaster.vehicleName, ...data}))
+			if (socket.readyState === WebSocket.OPEN) { // socket !== ws && 
+				socket.send(JSON.stringify({ vehicleName: broadcaster.vehicleName, ...data }))
+			}
 		})
 	})
 }

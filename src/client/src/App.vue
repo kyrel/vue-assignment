@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { useDataStore, type HistoryPoint, type Vehicle } from './stores/data'
+import { useDataStore } from './stores/data'
 import ViriBar from './components/ViriBar.vue'
 import ViriMap from './components/ViriMap.vue'
 
 import ViriTimeChart from './components/ViriTimeChart.vue'
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
-import { storeToRefs } from 'pinia';
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
@@ -19,40 +18,11 @@ function speedPercentage(val: number) {
 const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
-//const watchedVehicleNames = [] as string[]
-
-// function processChange(vehicleName: string, colorIndex: number, historyPoint?: HistoryPoint) {
-//   if (!historyPoint) return
-//   speedChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.speed)
-//   stateOfChargeChart.value?.addDataPoint(vehicleName, colorIndex, historyPoint.timestamp, historyPoint.stateOfCharge)
-// }
-
-// function watchVehicle(vehicle: Vehicle) {
-//   if (!watchedVehicleNames.includes(vehicle.vehicleName)) {
-//     watchedVehicleNames.push(vehicle.vehicleName)
-//     processChange(vehicle.vehicleName, vehicle.colorIndex, vehicle.state.historyPoint)
-//     watch(() => vehicle.state.historyPoint, historyPoint => {
-//       processChange(vehicle.vehicleName, vehicle.colorIndex, historyPoint)
-//     })
-//   }
-// }
 
 dataStore.addDataListener((data)=>{
-  //const {timestamp, speed, stateOfCharge} = (e as CustomEvent).detail
   speedChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.speed)
   stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.stateOfCharge)
 })  
-
-// //THIS IS SOME UGLY EVENT EMULATION
-// const { vehicles: vehiclesRef } = storeToRefs(dataStore)
-// for (let vehicle of vehiclesRef.value) {
-//   watchVehicle(vehicle)
-// }
-
-// watch(() => vehiclesRef.value.length, len => {
-//   for (let vehicle of vehiclesRef.value) watchVehicle(vehicle)
-// })
-
 
 function jumpToActiveVehicle() {
   if (dataStore.activeVehicle?.vehicleName == dataStore.trackedVehicleName) return

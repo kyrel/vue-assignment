@@ -14,12 +14,6 @@ interface DataPoint {
   vehicleName: string
 }
 
-export interface HistoryPoint {
-  timestamp: number,
-  speed: number,
-  stateOfCharge: number
-}
-
 export interface HistoryData {
   vehicleName: string,
   colorIndex: number,
@@ -35,8 +29,7 @@ export interface VehicleState {
   speed: number,
   stateOfCharge: number,
   latitude: number,
-  longitude: number,
-  historyPoint?: HistoryPoint
+  longitude: number
 }
 
 export interface Vehicle {
@@ -108,6 +101,9 @@ export const useDataStore = defineStore("data", () => {
    * Process a data point that appeared out of the WebSocket connection
    */
   function processDataPoint(dataPoint: DataPoint) {
+    //This looks like a corrupt data point, let's skip it
+    if (!dataPoint.time) return
+
     let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == dataPoint.vehicleName)
     if (vehicleIndex < 0) {
       const indexToInsert = vehicles.value.findIndex(v => v.vehicleName.localeCompare(dataPoint.vehicleName) > 0)
@@ -129,22 +125,19 @@ export const useDataStore = defineStore("data", () => {
       vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
     }
     const vehicle = vehicles.value[vehicleIndex]
+
     if (!activeVehicle.value) activeVehicle.value = vehicle
+
     const vehicleState = vehicle.state
     const vehicleBuffer = vehicleBuffers[dataPoint.vehicleName]
-    //we won't process an exactly the same point in time
-    if (+dataPoint.time == vehicleState.latestTime) return
 
-    //This looks like a corrupt data point, let's skip it
-    if (!dataPoint.time) return
+    // we won't process an exactly the same point in time
+    if (+dataPoint.time == vehicleState.latestTime) return    
 
-    // the file is over and we have to restart
-    if (+dataPoint.time < vehicleState.latestTime) {
-      vehicleState.historyPoint = undefined
-      vehicleState.latestTime = 0
-
-      vehicleBuffer.reset()
-    }
+    // we won't process data from the past
+    // TODO: still process it if it falls nicely in the buffer
+    if (+dataPoint.time < vehicleState.latestTime) return
+    
     // set the current state
     vehicleState.energy = +dataPoint.energy
     vehicleState.odometer = +dataPoint.odo
@@ -156,7 +149,6 @@ export const useDataStore = defineStore("data", () => {
 
     const aggregate = vehicleBuffer.add(+dataPoint.time, +dataPoint.speed, +dataPoint.soc)
     if (aggregate) {
-      vehicleState.historyPoint = aggregate
       history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: dataPoint.vehicleName, colorIndex: vehicle.colorIndex, ...aggregate} }))
     }
 
