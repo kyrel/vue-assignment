@@ -48,8 +48,8 @@ onMounted(() => {
                         autoSkip: false,
                         minRotation: 50,
                         maxRotation: 50,
-                        sampleSize: 1,   
-                        includeBounds: true                    
+                        sampleSize: 1,
+                        includeBounds: true
                     },
                     max: 0
                 },
@@ -81,13 +81,13 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             cubicInterpolationMode: "monotone",
             parsing: false
         }
-        const indexToInsert = chart.data.datasets.findIndex(d => (d.label||"").localeCompare(datasetName) > 0)
+        const indexToInsert = chart.data.datasets.findIndex(d => (d.label || "").localeCompare(datasetName) > 0)
         if (indexToInsert >= 0) {
-            chart.data.datasets.splice(indexToInsert, 0, chartDs)            
+            chart.data.datasets.splice(indexToInsert, 0, chartDs)
         }
         else {
-            chart.data.datasets.push(chartDs)                    
-        }                
+            chart.data.datasets.push(chartDs)
+        }
     }
     if (!chart.options.scales) chart.options.scales = {}
     if (!chart.options.scales["x"]) chart.options.scales["x"] = { max: 0 }
@@ -117,7 +117,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             chartDs.data.splice(0, lengthToChop)
         }
     }
- 
+
     if (x >= (scaleX.min as number))
         chartDs.data.push({ x, y })
 
@@ -126,7 +126,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
         const delta = y - currentScaleYMax
         const steps = Math.floor(delta / props.maxGrowStep) + 1
         scaleY.max = currentScaleYMax + steps * props.maxGrowStep
-    }    
+    }
     chart.update()
 }
 
@@ -134,14 +134,14 @@ defineExpose({ addDataPoint })
 
 </script>
 <template>
-    <div class="chart-container">
+    <div class="viri-chart">
         <canvas ref="canvas"></canvas>
     </div>
 </template>
 
-<style scoped>
-.chart-container {
-    position: relative;
+<style scoped lang="scss">
+/* @define viri-chart */
+.viri-chart {
     width: 100%;
     height: 300px;
 }

@@ -5,9 +5,9 @@ defineProps<{
 }>()
 </script>
 <template>
-    <div class="bar">
-        <div class="bar__full" :style="{ width: `${percentageFull.toFixed(1)}%` }">
-            <div class="bar__text">
+    <div class="viri-bar">
+        <div class="viri-bar__full" :style="{ width: `${percentageFull.toFixed(1)}%` }">
+            <div class="viri-bar__text">
                 {{ label }}
             </div>
         </div>
@@ -15,11 +15,11 @@ defineProps<{
 </template>
 
 <style scoped lang="scss">
-.bar {
+/* @define viri-bar */
+.viri-bar {
     border-radius: 4px;
     border: 2px solid #bdbdbd;
     background-color: #fff;
-    /*height: 20px;*/
 
     &__full {
         background-color: #b5e9cb;
