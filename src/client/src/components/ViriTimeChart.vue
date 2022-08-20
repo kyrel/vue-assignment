@@ -34,21 +34,23 @@ onMounted(() => {
             responsive: true,
             maintainAspectRatio: false,
             normalized: true,
-            animation: false,
-            // animations: {
-            //      y: { duration: 0 },
-            //      x: { duration: 100 },
-            //  },
+            //animation: false,
+             animations: {
+                  y: { duration: 0 },
+                  x: { duration: 150 },
+              },
             scales: {
                 x: {
                     type: 'time',
                     ticks: {
-                        maxTicksLimit: 20,
+                        maxTicksLimit: 8,
+                        autoSkip: false,
                         minRotation: 50,
                         maxRotation: 50,
-                        sampleSize: 1
+                        sampleSize: 1,   
+                        includeBounds: true                    
                     },
-                    max: 0            
+                    max: 0
                 },
                 y: {
                     beginAtZero: true,
@@ -143,7 +145,7 @@ defineExpose({ addDataPoint })
 </script>
 <template>
     <div class="chart-container">
-        <canvas ref="canvas" height="100" width="300"></canvas>
+        <canvas ref="canvas"></canvas>
     </div>
 </template>
 
