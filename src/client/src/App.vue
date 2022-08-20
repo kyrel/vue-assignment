@@ -25,9 +25,11 @@ dataStore.addDataHistoryListener((data)=>{
 })  
 
 function jumpToActiveVehicle() {
-  if (dataStore.activeVehicle?.vehicleName == dataStore.trackedVehicleName) return
+  if (!map.value) return
+  if (!dataStore.activeVehicle) return
+  if (dataStore.activeVehicle.vehicleName == dataStore.trackedVehicleName) return
   dataStore.untrackVehicle()
-  map.value!.jumpTo(dataStore.activeVehicle!.vehicleName)
+  map.value.jumpTo(dataStore.activeVehicle.vehicleName)
 }
 
 const showDetails = ref(true)

@@ -24,7 +24,8 @@ Chart.register(LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScal
 const canvas = ref(null as null | HTMLCanvasElement)
 
 onMounted(() => {
-    const ctx = canvas.value!.getContext("2d")!
+    const ctx = canvas.value?.getContext("2d")
+    if (!ctx) return
     chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -34,11 +35,11 @@ onMounted(() => {
             responsive: true,
             maintainAspectRatio: false,
             normalized: true,
-            //animation: false,
-             animations: {
-                  y: { duration: 0 },
-                  x: { duration: 150 },
-              },
+            animation: false,
+            //  animations: {
+            //       y: { duration: 0 },
+            //       x: { duration: 150 },
+            //   },
             scales: {
                 x: {
                     type: 'time',
@@ -88,9 +89,14 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             chart.data.datasets.push(chartDs)                    
         }                
     }
-    if (x > (chart.options.scales!["x"]!.max as number)) {
-        chart.options.scales!["x"]!.max = x
-        chart.options.scales!["x"]!.min = x - props.timeWindowMs
+    if (!chart.options.scales) chart.options.scales = {}
+    if (!chart.options.scales["x"]) chart.options.scales["x"] = { max: 0 }
+    if (!chart.options.scales["y"]) chart.options.scales["y"] = { max: 0 }
+    const scaleX = chart.options.scales["x"]
+    const scaleY = chart.options.scales["y"]
+    if (x > (scaleX.max as number)) {
+        scaleX.max = x
+        scaleX.min = x - props.timeWindowMs
     }
     //some timestamps may no longer be present on props
     if (chartDs.data.length > 0 && x < chartDs.data[0].x) {
@@ -104,7 +110,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
     }
     else {
         let lengthToChop = 0
-        while (lengthToChop < chartDs.data.length && chartDs.data[lengthToChop].x < (chart.options.scales!["x"]!.min as number)) {
+        while (lengthToChop < chartDs.data.length && chartDs.data[lengthToChop].x < (scaleX.min as number)) {
             lengthToChop++
         }
         if (lengthToChop) {
@@ -118,14 +124,14 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
     while (newDataIndex < chart.data.labels!.length && newDataIndex < timestamps.length && chart.data.labels![newDataIndex] == timestamps[newDataIndex]) {
         newDataIndex++
     } */
-    if (x >= (chart.options.scales!["x"]!.min as number))
+    if (x >= (scaleX.min as number))
         chartDs.data.push({ x, y })
 
-    const currentScaleMax = +chart.options.scales!["y"]!.max!
-    if (y > currentScaleMax) {
-        const delta = y - currentScaleMax
+    const currentScaleYMax = scaleY.max as number
+    if (y > currentScaleYMax) {
+        const delta = y - currentScaleYMax
         const steps = Math.floor(delta / props.maxGrowStep) + 1
-        chart.options.scales!["y"]!.max = currentScaleMax + steps * props.maxGrowStep
+        scaleY.max = currentScaleYMax + steps * props.maxGrowStep
     }
     // if (x > (chart.options.scales!["x"]!.max as number)) {
     //     chart.options.scales!["x"]!.max = x
