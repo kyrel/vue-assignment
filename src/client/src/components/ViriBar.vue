@@ -14,23 +14,22 @@ defineProps<{
     </div>
 </template>
 
-<style scoped>
-
+<style scoped lang="scss">
 .bar {
     border-radius: 4px;
     border: 2px solid #bdbdbd;
     background-color: #fff;
     /*height: 20px;*/
-}
 
-.bar__full {
-    background-color: #b5e9cb;
-    overflow: visible;
-    transition: width 0.5s ease;
-}
+    &__full {
+        background-color: #b5e9cb;
+        overflow: visible;
+        transition: width 0.5s ease;
+    }
 
-.bar__text {
-    padding: 0 5px;
-    color: #000;
+    &__text {
+        padding: 0 5px;
+        color: #000;
+    }
 }
 </style>
