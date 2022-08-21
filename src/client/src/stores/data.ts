@@ -68,6 +68,30 @@ export const useDataStore = defineStore("data", () => {
     else trackActiveVehicle()
   }
 
+  function getOrAddStoreVehicle(vehicleName: string) {
+      let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)
+      if (vehicleIndex < 0) {
+          const indexToInsert = vehicles.value.findIndex(v => v.vehicleName.localeCompare(vehicleName) > 0)
+          const newState: VehicleState = {
+              latestTime: 0,
+              energy: 0,
+              odometer: 0,
+              speed: 0,
+              stateOfCharge: 0,
+              latitude: 0,
+              longitude: 0
+          }
+          const newVehicle = { vehicleName: vehicleName, state: newState, colorIndex: nextColorIndex }
+          nextColorIndex++
+          if (nextColorIndex > 9) nextColorIndex = 0
+          if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
+          else vehicles.value.push(newVehicle)
+          vehicleBuffers[vehicleName] = new VehicleDataBuffer()
+          vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
+      }
+      return vehicles.value[vehicleIndex]
+  }
+
   /**
    * Process a data point that appeared out of the WebSocket connection
    */
@@ -75,27 +99,7 @@ export const useDataStore = defineStore("data", () => {
     //This looks like a corrupt data point, let's skip it
     if (!dataPoint.time) return
 
-    let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == dataPoint.vehicleName)
-    if (vehicleIndex < 0) {
-      const indexToInsert = vehicles.value.findIndex(v => v.vehicleName.localeCompare(dataPoint.vehicleName) > 0)
-      const newState: VehicleState = {
-        latestTime: 0,
-        energy: 0,
-        odometer: 0,
-        speed: 0,
-        stateOfCharge: 0,
-        latitude: 0,
-        longitude: 0
-      }
-      const newVehicle = { vehicleName: dataPoint.vehicleName, state: newState, colorIndex: nextColorIndex }
-      nextColorIndex++
-      if (nextColorIndex > 9) nextColorIndex = 0
-      if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
-      else vehicles.value.push(newVehicle)
-      vehicleBuffers[dataPoint.vehicleName] = new VehicleDataBuffer()
-      vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
-    }
-    const vehicle = vehicles.value[vehicleIndex]
+    const vehicle = getOrAddStoreVehicle(dataPoint.vehicleName)
 
     if (!activeVehicle.value) activeVehicle.value = vehicle
 
