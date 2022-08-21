@@ -93,7 +93,7 @@ export const useDataStore = defineStore("data", () => {
         if (+newState.time < currentState.time) {
             if (!_resetHasToBeHandled) return // we won't process data from the past unless a server was restarted. yes, even if it still fits the buffer
             // a server reset happened - let's allow 'data from the past' and rest all time's and vehicleBuffer's
-            for(let v of vehicles.value) {
+            for(const v of vehicles.value) {
                 v.state.time = 0
                 vehicleBuffers[v.vehicleName] = new VehicleDataBuffer()
             }
@@ -135,7 +135,7 @@ export const useDataStore = defineStore("data", () => {
      * @param listener 
      */
     function addDataResetListener(listener: () => void) {
-        _history.addEventListener("dataReset", (e) => listener())
+        _history.addEventListener("dataReset", () => listener())
     }
 
     return { 

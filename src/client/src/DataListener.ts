@@ -44,13 +44,13 @@ class DataListener {
                 })
         }
 
-        socket.onclose = (event) => {
+        socket.onclose = () => {
             console.log('Connection is closed. Reconnect will be attempted in 1 second.');
             this.onClose()
             setTimeout(() => { this.connect() }, 1000);
         }
 
-        socket.onerror = (error) => {
+        socket.onerror = () => {
             console.log('Failed to establish data connection');
             socket.close()
         }

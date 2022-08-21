@@ -13,7 +13,7 @@ Thanks for the opportunity to play with some fake e-vehicles! ;)
 I'll reason some of my choices in the following sections, the others mostly come as defaults for the modern Vue stack
 
 * Vite 3
-* Vue 3
+* Vue 3 (SFCs / composition API / script setup)
 * Pinia
 * Yandex Maps
 * Chart.js
@@ -138,7 +138,7 @@ The component is again "dumb", not interacting directly with the store, websocke
 
 Strictly speaking, with the lack of any component interaction or data duplication between components, the application could survive without an external state store, having all the state inside the App root component. However, introducing a (Pinia) store is a nice chance to somewhat separate state and logic from the presentation.
 
-While `vehicles`, `selectedVehicle` and `trackSelectedVehicle` are classic reactive properties, and `selectVehicle` seems like a common action, the other exported members are less typical to see in a store. For example, `addDataHistoryListener` allows calling code to subscribe to appearing of a new point of moving-average reduced data for the charts, and the `processDataPoint` action may emit such an event in addition to modifiying the reactive state.
+While `vehicles`, `selectedVehicle` and `trackSelectedVehicle` are classic reactive properties, and `selectVehicle` seems like a common action, the other exported members are less typical to see in a store. For example, `addDataHistoryListener` allows calling code to subscribe to appearing of a new point of moving-average reduced data for the charts, and the `processDataPoint` action may emit such an event in addition to modifiying the reactive state. The store is implemented in the less-structured "setup" manner, which works better when the store's interface needs to have non-reactive data or we don't want to expose some of the functions and data members.
 
 The store itself does not listen to websocket messages, but it handles incoming parsed data, keep the global application state, contains logic to manage it and emits events relevant to charts.
 
@@ -152,7 +152,22 @@ The App root component contains the responsive layout for all the components (ma
 
 It also starts the DataListener, ties events emitted by the store to the charts and does the usual Vue reactivity and action work.
 
+### Styles
+
+The application mostly uses scoped styles in Vue SFCs defined via SCSS and following the BEM convention. A tiny portion is externalized to SCSS files. Global styles/resets are kept as plain CSS and use CSS variables to support switching to the dark theme.
+
 ## Code quality & tests
+
+* All client-side code is TypeScript, type checking may be run with `npm run type-check` or as part of `npm run build` in the /src/client directory
+* TypeScript Code is lintable via `npm run lint`
+* CSS and SCSS styles in .vue, .css and .scss files may be checked via `npx stylelint "**/*.vue", "**/*.css", "**/*.scss"` or as part of `npm run build`. Both adherence to standard best practices and BEM conventions are performed
+* Automated tests are run with `npm run test:unit`. Vitest does the job. Some notes on tests below.
+
+At the moment tests do not cover the entire application, but rather demonstrate the different parts of it that are testable:
+* `VehicleDataBuffer` is a class used internally by the store to calculate moving averages. It's a good example of code without external dependencies that may be tested easilty without mocking
+* `dataStore` is the single Pinia store of the application. It depends on the `VehicleDataBuffer`, but not on anything else. Its test mock the `VehicleDataBuffer` with Vitest mechanisms to keep them being unit tests :)
+* `ViriTimeChart` is a component with a very simple template an a canvas, which is a bit difficult to expect upon in tests. But the component has some important logic of adding a data point, and testing it seems like a good idea
+
 
 ![](https://github.com/viriciti/vue-assignment/raw/master/sketch.png)
 
