@@ -78,7 +78,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
             borderColor: colorPool[colorIndex].color,
             pointRadius: 0,
             pointHitRadius: 5,
-            cubicInterpolationMode: "monotone",
+            //cubicInterpolationMode: "monotone",
             parsing: false
         }
         const indexToInsert = chart.data.datasets.findIndex(d => (d.label || "").localeCompare(datasetName) > 0)

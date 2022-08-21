@@ -96,12 +96,13 @@ To further improve the performance of Chart.js the following actions were done:
 * Pre-calculating the range for the x axis, the number of labels displayed and their rotation angle also helps a lot
 
 
-### Hardcore reactivity vs. hydrid data flow
+### Hardcore reactivity vs. hybrid data flow
 
 Using a Vue reactive array for data in a Chart.js dataset does not work nicely.
 Chart.js does have a Vue wrapper implementation that knows that and smartly copies data from its props into the Chart.js dataset.
 However, using this wrapper or trying to use a similar approach without it (having a reactive array "the Vue way" and synchronizing it with data in Chart.js) introduces a major overhead, with the application mainly busy maintaining a reactive source of data which is never needed by itself.
-So after some consideration I've chosen to go "less Vue way", with the moving average data being emitted via events (event per point), consumed by the root component and being sent to the chart component. Thus the chart component has a method for accepting a data point as part of its interface, exposed via defineExpose. No third-party view wrappers over Chart.js are used. Performance has raised significantly, and the interfaces still seem pretty clean. But yeah, it's not a 100% reactivity-based application now, with some data flowing as event payload.
+
+So after some consideration I've chosen to go "less Vue way", with the moving average data being emitted via events (event per data point), consumed by the root component and being sent to the chart component. Thus the chart component has a method for accepting a data point as part of its interface, exposed via defineExpose. No third-party view wrappers over Chart.js are used. Performance has raised significantly, and the interfaces still seem pretty clean. But yeah, it's not a 100% reactivity-based application now, with some data flowing as event payload.
 
 ## Implementation details
 
@@ -111,23 +112,45 @@ A simple classic "dumb" Vue component with reactive props. Good to have it, cons
 
 ### ViriMap
 
-Uses the Vue wrapper (`vue-yandex-maps`) to display a Yandex Maps component with a collection of markers corresponding to vehicles.
+Uses the Vue wrapper (`vue-yandex-maps`) to display a Yandex Maps component with a collection of markers corresponding to vehicles. 
+
 Unfortunately, attempting to provide new values for the props of the third-party maps components does not cause the map to update, so instead I had to get hold of references to the underlying map and markers and manually update them watching the props of ViriMap.
+
 The component also exposes the `jumpTo` method to immediately center the map around the given marker.
+
 Yandex maps has a predefined set of marker colors, so one of such colors is passed as a property of each marker in props.
+
 ViriMap is also "dumb" in the sense it's solely driven by its props and does not interact with other parts of the application.
 
 ### ViriTimeChart
 
 Has a totally minimalistic template with just a canvas wrapped in a div and an exposed method (`addDataPoint`) to carefully add new data to the chart.
-Initializes the canvas with a line chart sporting a time scale for X and supporting multiple color-coded datasets (we use them to display data about the different vehicles)
+
+Initializes the canvas with a line chart sporting a time scale for X and supporting multiple color-coded datasets (we use them to display data about the different vehicles).
+
 The most interesting prop would be `timeWindowMs`, allowing to specify the time range covered by the X axis.
-`_getChart` is exposed for tests only
-The component is again "dumb", not interacting directly with the store, websockets or other parts of the application
+
+`_getChart` is exposed for tests only.
+
+The component is again "dumb", not interacting directly with the store, websockets or other parts of the application.
 
 ### The store
+
+Strictly speaking, with the lack of any component interaction or data duplication between components, the application could survive without an external state store, having all the state inside the App root component. However, introducing a (Pinia) store is a nice chance to somewhat separate state and logic from the presentation.
+
+While `vehicles`, `selectedVehicle` and `trackSelectedVehicle` are classic reactive properties, and `selectVehicle` seems like a common action, the other exported members are less typical to see in a store. For example, `addDataHistoryListener` allows calling code to subscribe to appearing of a new point of moving-average reduced data for the charts, and the `processDataPoint` action may emit such an event in addition to modifiying the reactive state.
+
+The store itself does not listen to websocket messages, but it handles incoming parsed data, keep the global application state, contains logic to manage it and emits events relevant to charts.
+
 ### The DataListener
+
+DataListener is responsible for opening a connection to the websocket server, listening for incoming data and handling reconnection in case of server or network failure. The URL of the web socket server is based on the current .env file, meaning it could be both the same server where there frontend app is running (typical for our "production" environment) or a server running on a different port or machine (like in our development environment or some hypothetical deployments with different topologies).
+
 ### The App
+
+The App root component contains the responsive layout for all the components (map, details with swiches, bars and plain values, charts).
+
+It also starts the DataListener, ties events emitted by the store to the charts and does the usual Vue reactivity and action work.
 
 ## Code quality & tests
 
