@@ -18,7 +18,7 @@ export class VehicleDataBuffer {
     }
 
     add(time: number, speed: number, stateOfCharge: number) {
-        if (this.time != 0 && Math.floor(this.time / 5000) != Math.floor(time / 5000)) {
+        if (this.time != 0 && Math.floor(this.time / 10000) != Math.floor(time / 10000)) {
             return this.flush()
         }
 

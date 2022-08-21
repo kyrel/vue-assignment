@@ -169,6 +169,7 @@ At the moment tests do not cover the entire application, but rather demonstrate 
 * `ViriTimeChart` is a component with a very simple template an a canvas, which is a bit difficult to expect upon in tests. But the component has some important logic of adding a data point, and testing it seems like a good idea
 
 
-![](https://github.com/viriciti/vue-assignment/raw/master/sketch.png)
+![](https://github.com/kyrel/vue-assignment/raw/master/light.png)
+![](https://github.com/kyrel/vue-assignment/raw/master/dark.png)
 
 

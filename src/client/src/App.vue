@@ -10,7 +10,7 @@ import '@/assets/color-coding.scss'
 import { DataListener } from './DataListener';
 import { storeToRefs } from 'pinia';
 
-const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
+const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 20
 
 const dataStore = useDataStore()
 
