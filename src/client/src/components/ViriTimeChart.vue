@@ -99,15 +99,15 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
         scaleX.min = x - props.timeWindowMs
     }
     if (chartDs.data.length > 0 && x < chartDs.data[0].x) {
-        console.log("A timestamp is less than previous! Shouldn't happen!", x, y)        
+        console.log("A timestamp is less than previous! Shouldn't happen!", x, y)
     }
     else {
         let lengthToChop = 0
         while (lengthToChop < chartDs.data.length && chartDs.data[lengthToChop].x < (scaleX.min as number)) {
             lengthToChop++
         }
-        if (lengthToChop) {
-            chartDs.data.splice(0, lengthToChop)
+        if (lengthToChop > 1) {
+            chartDs.data.splice(0, lengthToChop - 1) //We live one point outside of the range to make things look nicer
         }
     }
 
@@ -123,18 +123,20 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
     chart.update()
 }
 
-function reset(){
+function reset() {
     if (!chart) return
-    for(let chartDs of chart.data.datasets){
+    for (let chartDs of chart.data.datasets) {
         chartDs.data = []
         if (chart.options.scales && chart.options.scales["x"]) {
-            chart.options.scales["x"].max = 0        
-            chart.options.scales["x"].min = 0        
+            chart.options.scales["x"].max = 0
+            chart.options.scales["x"].min = 0
         }
-    }    
+    }
 }
 
-defineExpose({ addDataPoint, reset })
+function _getChart() { return chart }
+
+defineExpose({ addDataPoint, reset, _getChart /*for tests*/ })
 
 </script>
 <template>
