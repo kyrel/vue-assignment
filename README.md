@@ -1,7 +1,7 @@
 
 # ViriCiti Vue Assignment Implementation
 ---
-![](https://imgs.xkcd.com/comics/self_description.png)
+![](https://github.com/kyrel/vue-assignment/raw/master/light.png)
 
 Here comes a short description of how I interpreted and implemented the assignment at https://github.com/viriciti/vue-assignment.
 Thanks for the opportunity to play with some fake e-vehicles! ;)
@@ -59,6 +59,8 @@ As I've made it possible to track multiple vehicles with the app, the backend ch
 * Finally, the server is set up to serve static files from the /src/client/dist directory
 
 ## Frontend features
+
+![](https://github.com/kyrel/vue-assignment/raw/master/light.png)
 
 * Display all vehicles on a map with marker position refreshed in real-time
 * One of the vehicles is considered selected, with its details visible on the right pane as real-time bars (speed, state of charge) and plain values (energy, odometer). The marker of the selected vehicle on the map contains a large dot in the center
@@ -169,7 +171,7 @@ At the moment tests do not cover the entire application, but rather demonstrate 
 * `ViriTimeChart` is a component with a very simple template an a canvas, which is a bit difficult to expect upon in tests. But the component has some important logic of adding a data point, and testing it seems like a good idea
 
 
-![](https://github.com/kyrel/vue-assignment/raw/master/light.png)
+
 ![](https://github.com/kyrel/vue-assignment/raw/master/dark.png)
 
 
