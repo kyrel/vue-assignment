@@ -1,7 +1,7 @@
 
 # ViriCiti Vue Assignment Implementation
 ---
-![](https://github.com/kyrel/vue-assignment/raw/master/light.png)
+![](https://github.com/kyrel/vue-assignment/raw/master/dark_mobile.png)
 
 Here comes a short description of how I interpreted and implemented the assignment at https://github.com/viriciti/vue-assignment.
 Thanks for the opportunity to play with some fake e-vehicles! ;)
@@ -169,9 +169,4 @@ At the moment tests do not cover the entire application, but rather demonstrate 
 * `VehicleDataBuffer` is a class used internally by the store to calculate moving averages. It's a good example of code without external dependencies that may be tested easilty without mocking
 * `dataStore` is the single Pinia store of the application. It depends on the `VehicleDataBuffer`, but not on anything else. Its test mock the `VehicleDataBuffer` with Vitest mechanisms to keep them being unit tests :)
 * `ViriTimeChart` is a component with a very simple template an a canvas, which is a bit difficult to expect upon in tests. But the component has some important logic of adding a data point, and testing it seems like a good idea
-
-
-
-![](https://github.com/kyrel/vue-assignment/raw/master/dark.png)
-
 
