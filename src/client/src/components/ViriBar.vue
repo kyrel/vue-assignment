@@ -19,17 +19,16 @@ defineProps<{
 .viri-bar {
     border-radius: 4px;
     border: 2px solid var(--color-border);
-    background-color: #fff;
+    background-color: var(--color-background);
 
     &__full {
-        background-color: #b5e9cb;
+        background-color: var(--color-background-fill);
         overflow: visible;
         transition: width 0.5s ease;
     }
 
     &__text {
         padding: 0 5px;
-        color: #000;
     }
 }
 </style>

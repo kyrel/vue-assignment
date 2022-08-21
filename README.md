@@ -159,7 +159,7 @@ The application mostly uses scoped styles in Vue SFCs defined via SCSS and follo
 ## Code quality & tests
 
 * All client-side code is TypeScript, type checking may be run with `npm run type-check` or as part of `npm run build` in the /src/client directory
-* TypeScript Code is lintable via `npm run lint`
+* TypeScript code is lintable via `npm run lint`
 * CSS and SCSS styles in .vue, .css and .scss files may be checked via `npx stylelint "**/*.vue", "**/*.css", "**/*.scss"` or as part of `npm run build`. Both adherence to standard best practices and BEM conventions are performed
 * Automated tests are run with `npm run test:unit`. Vitest does the job. Some notes on tests below.
 
