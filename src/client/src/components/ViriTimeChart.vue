@@ -125,7 +125,7 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
 
 function reset() {
     if (!chart) return
-    for (let chartDs of chart.data.datasets) {
+    for (const chartDs of chart.data.datasets) {
         chartDs.data = []
         if (chart.options.scales && chart.options.scales["x"]) {
             chart.options.scales["x"].max = 0
