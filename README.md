@@ -1,79 +1,84 @@
 
-# ViriCiti Vue Assignment
+# ViriCiti Vue Assignment Implementation
 ---
 ![](https://imgs.xkcd.com/comics/self_description.png)
 
-This repository holds the ViriCiti Vue assignment. In this project you will find the description regarding the assignment for you to do. This assignment represent what we do on a day to day basis. We receive raw data from vehicles store it on database then send it to browser app via web socket.
+Here comes a short description of how I interpreted and implemented the assignment at `https://github.com/viriciti/vue-assignment`.
+Thanks for the opportunity to play with some fake e-vehicles! ;)
 
 ---
 
-## Getting Started
-First of all, fork the repository at:
+## Technologies used
 
-`https://github.com/viriciti/vue-assignment`
+I'll reason some of my choices in the following sections, the others mostly come as defaults for the modern Vue stack
 
-Then open up your terminal and clone the forked repository
+* Vite 3
+* Vue 3
+* Pinia
+* Yandex Maps
+* Chart.js
+* TypeScript
+* SCSS (& some CSS)
+* Vitest, 
+* ESLint
+* Stylelint / BEM
 
-<sup>Replace [YOUR_USERNAME] with your name</sup>
 
-`git clone https://github.com/[YOUR_USERNAME]/vue-assignment.git`
+## Running the code
 
-Enter the directory
+### Frontend development mode
 
-`cd vue-assignment`
-
-Install all the dependencies
-
-`npm i`
-
-Run the app
+In "frontend development" scenario the server and the cleint apps may be run separately on different ports by different web servers.
+In this case the server app is used only to feed data to the client via web sockets. The server might be started via 
 
 `npm start`
 
----
+in the working copy directory. It uses port 3000 by default, being backed by node & express. The client is started running
 
-## The Assignment
-We have provided you with a starter kit that broadcast vehicle data via web socket. You can find the HTTP server on `src/server/app.js`, it's a bare minimum setup containing an express server to serve HTML page and ws server that broadcast raw data. What you need to build is a front end application that should look like below:
+`npm run dev`
+
+in the the src/client subdirectory. It runs on port 5137 by default and uses Vite as the web server. It lets you enjoy Vite's blazing fast hot module replacement.
+
+### Building the frontend app
+
+Typically for a Vite setup, the client application might be built for deployment running
+
+`npm run build`
+
+in the the src/client subdirectory. The bundled frontend application assets are served by the "backend" as static files, so after performing the build one needs just the backend server to work. With the server launched locally the overall setup may be accessed by opening http://localhost:3000 in the browser.
+
+
+## Changes to the backend
+
+As I've made it possible to track multiple vehicles with the app, the backend changes focus mostly on that.
+
+* The Broadcaster class accepts a unique vehicle name that will be reported to the client together with the data
+* It also accepts a parameter for an offset in the CSV file - all Broadcasters use the same file but start from a different line, so the vehicles are going to endlessly chase each other %)
+* Having such a multiple vehicle setup and wishing to display data from multiple vehicles on the same chart makes it inappropriate to re-broadcast vehicle data once it's over "jumping back in time". So instead once the end of the file is reached, data from the beginning are broadcasted with a time delta applied, so time only rolls forward. Additional corrections are applied to Broadcasters with offsets - thought they start with data from some line in the middle of the file, it's paried with time taken from the beginning of the file. Thus all broadcasters send data bound to similar points in time
+* The initial setup was prone to errors when the client got disconnected during data transmission, and one might've killed the server by refreshing the page several times. An additional check for the client state has been introduced.
+* Finally, the server is set up to serve static files from the /src/client/dist directory
+
+## Frontend features
+
+* Display all vehicles on a map with marker position refreshed in real-time
+* One of the vehicles is considered selected, with its details visible on the right pane as real-time bars (speed, state of charge) and plain values (energy, odometer). The marker of the selected vehicle on the map contains a large dot in the center
+* The user may change the selected vehicle clicking one of the selection buttons in the top-right or clicking a marker on the map
+* The user may wish to track the selected vehicle, with the map automatically keeping in centered when it moves. One also may just jump to the vehicle location on the map without necessarily turning tracking on
+* The history of speed and state of charge values for all vehicles are displayed on two corresponding linear charts. To keep the amount of dots sane, data is reduced to a moving average (see notes on optimizations below). Individual vehicle data display can be turned on & off clicking the series title
+* Vehicles are color-coded across the charts, switch buttons & line markers
+
+## Non-functional characteristics
+
+* Responsive layout
+* Support for the browser dark theme (comes as part of Vue3 scaffold project, so why not, hehe)
+* Server restart or lost connection are handled
+
+## Challenges and tough decisions
+### The mapping component
+### The charting component
+### Hardcore reactivity vs. hydrid data flow
+
 
 ![](https://github.com/viriciti/vue-assignment/raw/master/sketch.png)
 
-The whole front end application should be build with [Vue.js](https://vuejs.org/), but you're free to choose how it's build and composed. Data that are needed to render all those component is provided via the web socket connection.
 
-As you can see in this repository there are no webpack configuration  and frontend server. You're free to create your own configuration, maybe you want different config for production and development.
-
-### Get Creative!
-You can also extend the functionality for both front end and back end of the application. For example, making a more informative front end or incident for vehicle that went to fast on the road (this can be done both in the front end and back end, double points for back end implementation ;) )
-
-### The data
-On websocket stream the data should look like this:
-
-```JS
-{
-  time: 1511512585495,
-  energy: 85.14600000000002,
-  gps: ["52.08940124511719","5.105764865875244"],
-  odo: 5.381999999997788,
-  speed: 12,
-  soc: 88.00000000000007
-}
-```
-
-* time - Unix timestamp of the moment the datapoint was recorder
-* energy - Energy used in kWh
-* gps - Latitude and longitude where the datapoint was recorded
-* odo - The distance driven in km
-* speed - The speed the vehicle was going in km/h
-* soc - The state of charge (battery) of the vehicle in %
-
-## Read up material
-Looking to level up your knowledge and skills? These are some good articles/courses that you can check out.
-* [Vue JS](https://vuejs.org/)
-* [Chartjs](https://www.chartjs.org/)
-* [Node.js WebSocket](https://flaviocopes.com/node-websockets/)
-### General
-* Learn [Node.js and it's modules](http://nodeschool.io/#workshoppers)
-
-## Questions
-If you have any questions about the assignment or project setup feel free to contact us at <a href='mailto:e.tamames@viriciti.com'>e.tamames@viriciti.com</a> or <a href='mailto:s.surur@viriciti.com'>s.surur@viriciti.com</a>. You can also come by the office. We're always ready to help.
-
-Good luck with the assignment!
