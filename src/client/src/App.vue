@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDataStore } from './stores/data'
+import { useDataStore } from './stores/dataStore'
 import ViriBar from './components/ViriBar.vue'
 import ViriMap from './components/ViriMap.vue'
 

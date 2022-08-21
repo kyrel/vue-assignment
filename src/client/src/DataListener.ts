@@ -1,4 +1,4 @@
-import type { VehicleState } from "./stores/data"
+import type { VehicleState } from "./stores/dataStore"
 
 /**
  * A data point received from the socket
