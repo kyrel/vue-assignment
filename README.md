@@ -1,7 +1,6 @@
 
 # ViriCiti Vue Assignment Implementation
 ---
-![](https://github.com/kyrel/vue-assignment/raw/master/dark_mobile.png)
 
 Here comes a short description of how I interpreted and implemented the assignment at https://github.com/viriciti/vue-assignment.
 Thanks for the opportunity to play with some fake e-vehicles! ;)
