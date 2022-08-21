@@ -2,14 +2,6 @@ import { VehicleDataBuffer } from '@/VehicleDataBuffer'
 import { defineStore } from 'pinia'
 import { readonly, ref } from 'vue'
 
-export interface HistoryData {
-    vehicleName: string,
-    colorIndex: number,
-    timestamp: number,
-    speed: number,
-    stateOfCharge: number
-}
-
 export interface VehicleState {
     time: number,
     energy: number,
@@ -20,10 +12,18 @@ export interface VehicleState {
     longitude: number
 }
 
-interface Vehicle {
+export interface Vehicle {
     vehicleName: string,
     colorIndex: number,
     state: VehicleState
+}
+
+export interface HistoryData {
+    vehicleName: string,
+    colorIndex: number,
+    time: number,
+    speed: number,
+    stateOfCharge: number
 }
 
 const vehicleBuffers = {} as Record<string, VehicleDataBuffer>
@@ -31,11 +31,16 @@ const vehicleBuffers = {} as Record<string, VehicleDataBuffer>
 let nextColorIndex = 0
 
 export const useDataStore = defineStore("data", () => {
-
+    /** A collection of all vehicles displayed on the dashboard  */
     const vehicles = ref([] as Vehicle[])
+    
+    /** The currently selected vehicle. Could be null if no vehicles are displayed  */
     const selectedVehicle = ref(null as null | Vehicle)
+    
+    /** True if map should be auto-centered around the currently selected vehicle */
     const trackSelectedVehicle = ref(false)
-    const history = new class extends EventTarget { }
+
+    const _history = new class extends EventTarget { }
 
     /**
      * Set a vehicle as being selected in the UI
@@ -45,7 +50,7 @@ export const useDataStore = defineStore("data", () => {
         selectedVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
     }  
 
-    function getOrAddStoreVehicle(vehicleName: string) {
+    function _getOrAddStoreVehicle(vehicleName: string) {
         let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)
         if (vehicleIndex < 0) {
             const indexToInsert = vehicles.value.findIndex(v => v.vehicleName.localeCompare(vehicleName) > 0)
@@ -69,7 +74,7 @@ export const useDataStore = defineStore("data", () => {
         return vehicles.value[vehicleIndex]
     }
 
-    let resetHasToBeHandled = false
+    let _resetHasToBeHandled = false
 
     /**
      * Process a data point that appeared out of an external source
@@ -78,7 +83,7 @@ export const useDataStore = defineStore("data", () => {
         //This looks like a corrupt data point, let's skip it
         if (!newState.time) return
 
-        const vehicle = getOrAddStoreVehicle(vehicleName)
+        const vehicle = _getOrAddStoreVehicle(vehicleName)
 
         if (!selectedVehicle.value) selectedVehicle.value = vehicle
 
@@ -86,14 +91,14 @@ export const useDataStore = defineStore("data", () => {
         const vehicleBuffer = vehicleBuffers[vehicleName]
 
         if (+newState.time < currentState.time) {
-            if (!resetHasToBeHandled) return // we won't process data from the past unless a server was restarted. yes, even if it still fits the buffer
+            if (!_resetHasToBeHandled) return // we won't process data from the past unless a server was restarted. yes, even if it still fits the buffer
             // a server reset happened - let's allow 'data from the past' and rest all time's and vehicleBuffer's
             for(let v of vehicles.value) {
                 v.state.time = 0
                 vehicleBuffers[v.vehicleName] = new VehicleDataBuffer()
             }
-            history.dispatchEvent(new CustomEvent("dataReset"))
-            resetHasToBeHandled = false
+            _history.dispatchEvent(new CustomEvent("dataReset"))
+            _resetHasToBeHandled = false
         }
 
         // we won't process an exactly the same point in time
@@ -104,7 +109,7 @@ export const useDataStore = defineStore("data", () => {
 
         const aggregate = vehicleBuffer.add(+newState.time, newState.speed, newState.stateOfCharge)
         if (aggregate) {
-            history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: vehicleName, colorIndex: vehicle.colorIndex, ...aggregate } }))
+            _history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: vehicleName, colorIndex: vehicle.colorIndex, ...aggregate } }))
         }        
     }
     
@@ -113,7 +118,7 @@ export const useDataStore = defineStore("data", () => {
      * Keep the current data intact, but be ready to reset them if the next data coming from the server is in the past
      */
     function beReadyToReset () {
-        resetHasToBeHandled = true
+        _resetHasToBeHandled = true
     }
 
     /**
@@ -121,7 +126,7 @@ export const useDataStore = defineStore("data", () => {
      * @param listener 
      */
     function addDataHistoryListener(listener: (historyData: HistoryData) => void) {
-        history.addEventListener("data", (e) => listener((e as CustomEvent).detail))
+        _history.addEventListener("data", (e) => listener((e as CustomEvent).detail))
     }
 
     /**
@@ -130,9 +135,9 @@ export const useDataStore = defineStore("data", () => {
      * @param listener 
      */
     function addDataResetListener(listener: () => void) {
-        history.addEventListener("dataReset", (e) => listener())
+        _history.addEventListener("dataReset", (e) => listener())
     }
-    
+
     return { 
         vehicles: readonly(vehicles), 
         selectedVehicle: readonly(selectedVehicle), 

@@ -30,7 +30,7 @@ describe('Vehicle data buffer', () => {
         const date = new Date().getTime()
         buffer.add(date, 20, 70)
         const aggregate = buffer.add(date + 6000, 30, 65)
-        expect(aggregate).toStrictEqual({timestamp: date, speed: 20, stateOfCharge: 70})        
+        expect(aggregate).toStrictEqual({time: date, speed: 20, stateOfCharge: 70})        
     })
 
     it("calculates average and uses final date when flushing", () => {
@@ -39,6 +39,6 @@ describe('Vehicle data buffer', () => {
         buffer.add(date, 20, 70)
         buffer.add(date+100, 30, 60)
         const aggregate = buffer.add(date + 6000, 40, 58)
-        expect(aggregate).toStrictEqual({ timestamp: date+100, speed: 25, stateOfCharge: 65 })
+        expect(aggregate).toStrictEqual({ time: date+100, speed: 25, stateOfCharge: 65 })
     })
 })
