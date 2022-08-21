@@ -18,7 +18,7 @@ defineProps<{
 /* @define viri-bar */
 .viri-bar {
     border-radius: 4px;
-    border: 2px solid #bdbdbd;
+    border: 2px solid var(--color-border);
     background-color: #fff;
 
     &__full {

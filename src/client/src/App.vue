@@ -161,7 +161,7 @@ async function setActiveVehicle(vehicleName: string) {
     }
 
     &__vehicle-selector {
-        border-bottom: 1px solid #bdbdbd;
+        border-bottom: 1px solid var(--color-border);
         padding-bottom: 4px;
         display: flex;
         flex-wrap: wrap;
@@ -199,6 +199,7 @@ async function setActiveVehicle(vehicleName: string) {
         display: block;
         margin-bottom: 4px;
         font-weight: 700;
+        color: var(--color-heading);
     }
 }
 </style>

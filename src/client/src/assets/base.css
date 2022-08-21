@@ -1,3 +1,5 @@
+/* stylelint-disable plugin/selector-bem-pattern, custom-property-empty-line-before, no-duplicate-selectors */
+
 /* color palette from <https://github.com/vuejs/theme> */
 :root {
     --vt-c-white: #fff;
@@ -32,8 +34,6 @@
 
     --color-heading: var(--vt-c-text-light-1);
     --color-text: var(--vt-c-text-light-1);
-
-    --section-gap: 160px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,6 +49,7 @@
         --color-text: var(--vt-c-text-dark-2);
     }
 }
+/* stylelint-enable */
 
 *, *::before, *::after { /* stylelint-disable-line */
     box-sizing: border-box;
