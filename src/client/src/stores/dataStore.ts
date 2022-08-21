@@ -28,8 +28,6 @@ export interface HistoryData {
 
 const vehicleBuffers = {} as Record<string, VehicleDataBuffer>
 
-let nextColorIndex = 0
-
 export const useDataStore = defineStore("data", () => {
     /** A collection of all vehicles displayed on the dashboard  */
     const vehicles = ref([] as Vehicle[])
@@ -50,6 +48,8 @@ export const useDataStore = defineStore("data", () => {
         selectedVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
     }  
 
+    let _nextColorIndex = 0
+
     function _getOrAddStoreVehicle(vehicleName: string) {
         let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)
         if (vehicleIndex < 0) {
@@ -63,9 +63,9 @@ export const useDataStore = defineStore("data", () => {
                 latitude: 0,
                 longitude: 0
             }
-            const newVehicle = { vehicleName: vehicleName, state: newState, colorIndex: nextColorIndex }
-            nextColorIndex++
-            if (nextColorIndex > 9) nextColorIndex = 0
+            const newVehicle = { vehicleName: vehicleName, state: newState, colorIndex: _nextColorIndex }
+            _nextColorIndex++
+            if (_nextColorIndex > 9) _nextColorIndex = 0
             if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
             else vehicles.value.push(newVehicle)
             vehicleBuffers[vehicleName] = new VehicleDataBuffer()
