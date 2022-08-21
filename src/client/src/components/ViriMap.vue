@@ -17,7 +17,7 @@ const props = defineProps<{
         ymapColor: string
     }[],
     selectedMarkerId: string | null
-    trackMarkerId: string | null
+    trackSelected: boolean
 }>()
 
 const emits = defineEmits(["markerClick"])
@@ -49,15 +49,14 @@ watch([() => props.markers, () => props.selectedMarkerId], ([markers, selectedMa
 
         if (selectedMarkerId == propMarker.id) {
             markerRef.marker.options.set({ preset: `islands#${propMarker.ymapColor}DotIcon` })
+            if (props.trackSelected) {
+                const state = map.action.getCurrentState() as { isTicking: boolean, zoom: number }
+                if (!state.isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], state.zoom)
+            }
         }
         else {
             markerRef.marker.options.set({ preset: `islands#${propMarker.ymapColor}Icon` })
-        }
-
-        if (props.trackMarkerId == propMarker.id) {
-            const state = map.action.getCurrentState() as { isTicking: boolean, zoom: number }
-            if (!state.isTicking) map.setCenter([propMarker.latitude, propMarker.longitude], state.zoom)
-        }
+        }        
     }
 }, { deep: true })
 

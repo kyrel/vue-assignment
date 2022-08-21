@@ -1,6 +1,6 @@
 import { VehicleDataBuffer } from '@/VehicleDataBuffer'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { readonly, ref } from 'vue'
 
 export interface HistoryData {
     vehicleName: string,
@@ -33,8 +33,8 @@ let nextColorIndex = 0
 export const useDataStore = defineStore("data", () => {
 
     const vehicles = ref([] as Vehicle[])
-    const activeVehicle = ref(null as null | Vehicle)
-    const trackedVehicleName = ref(null as null | string)
+    const selectedVehicle = ref(null as null | Vehicle)
+    const trackSelectedVehicle = ref(false)
     const history = new class extends EventTarget { }
 
     /**
@@ -42,22 +42,8 @@ export const useDataStore = defineStore("data", () => {
      * @param name
      */
     function selectVehicle(name: string) {
-        activeVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
-    }
-
-    function trackActiveVehicle() {
-        trackedVehicleName.value = activeVehicle.value?.vehicleName || null
-    }
-
-    function untrackVehicle() {
-        trackedVehicleName.value = null
-    }
-
-    function toggleActiveVehicleTrack() {
-        if (!activeVehicle.value) return
-        if (trackedVehicleName.value == activeVehicle.value.vehicleName) untrackVehicle()
-        else trackActiveVehicle()
-    }
+        selectedVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
+    }  
 
     function getOrAddStoreVehicle(vehicleName: string) {
         let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)
@@ -94,7 +80,7 @@ export const useDataStore = defineStore("data", () => {
 
         const vehicle = getOrAddStoreVehicle(vehicleName)
 
-        if (!activeVehicle.value) activeVehicle.value = vehicle
+        if (!selectedVehicle.value) selectedVehicle.value = vehicle
 
         const currentState = vehicle.state
         const vehicleBuffer = vehicleBuffers[vehicleName]
@@ -148,16 +134,13 @@ export const useDataStore = defineStore("data", () => {
     }
     
     return { 
-        vehicles, 
-        activeVehicle, 
-        trackedVehicleName, 
+        vehicles: readonly(vehicles), 
+        selectedVehicle: readonly(selectedVehicle), 
+        trackSelectedVehicle, 
         processDataPoint, 
         beReadyToReset, 
         addDataHistoryListener,
         addDataResetListener,
-        selectVehicle,
-        trackActiveVehicle,
-        untrackVehicle,
-        toggleActiveVehicleTrack 
+        selectVehicle
     }
 })

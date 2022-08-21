@@ -7,7 +7,8 @@ import ViriTimeChart from './components/ViriTimeChart.vue'
 import { nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
 import '@/assets/color-coding.scss'
-import { DataListener } from './dataListener';
+import { DataListener } from './DataListener';
+import { storeToRefs } from 'pinia';
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
@@ -38,13 +39,14 @@ const dataListener = new DataListener(
 
 dataListener.connect()
 
-function jumpToActiveVehicle() {
+function jumpToSelectedVehicle() {
     if (!map.value) return
-    if (!dataStore.activeVehicle) return
-    if (dataStore.activeVehicle.vehicleName == dataStore.trackedVehicleName) return
-    dataStore.untrackVehicle()
-    map.value.jumpTo(dataStore.activeVehicle.vehicleName)
+    if (!dataStore.selectedVehicle) return
+    if (dataStore.trackSelectedVehicle) return
+    map.value.jumpTo(dataStore.selectedVehicle.vehicleName)
 }
+
+const { selectedVehicle } = storeToRefs(dataStore)
 
 const showDetails = ref(true)
 
@@ -57,51 +59,49 @@ async function selectVehicle(vehicleName: string) {
 </script>
 
 <template>
-    <main class="dashboard" v-if="dataStore.activeVehicle">
+    <main class="dashboard" v-if="selectedVehicle">
         <div class="dashboard__map-and-details">
             <div class="dashboard__map">
-                <ViriMap ref="map" :latitude="dataStore.activeVehicle.state.latitude"
-                    :longitude="dataStore.activeVehicle.state.longitude"
+                <ViriMap ref="map" :latitude="selectedVehicle.state.latitude"
+                    :longitude="selectedVehicle.state.longitude"
                     :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, ymapColor: colorPool[v.colorIndex].ymapColor }))"
-                    :selected-marker-id="dataStore.activeVehicle?.vehicleName || null"
-                    :track-marker-id="dataStore.trackedVehicleName" @marker-click="selectVehicle" />
+                    :selected-marker-id="selectedVehicle.vehicleName" :track-selected="dataStore.trackSelectedVehicle"
+                    @marker-click="selectVehicle" />
             </div>
             <div class="dashboard__details-with-selector">
                 <div class="dashboard__vehicle-selector">
                     <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName"
                         @click="selectVehicle(vehicle.vehicleName)" class="dashboard__vehicle-button color-coded-button"
-                        :class="[{ 'color-coded-button--active': vehicle == dataStore.activeVehicle }, 'color-coded-button--' + vehicle.colorIndex]">
+                        :class="[{ 'color-coded-button--active': vehicle.vehicleName == selectedVehicle.vehicleName }, 'color-coded-button--' + vehicle.colorIndex]">
                         {{ vehicle.vehicleName }}
                     </button>
                 </div>
                 <Transition name="ease-in-out-" mode="out-in">
                     <div v-if="showDetails" class="dashboard__details">
                         <div class="dashboard__vehicle-map-controls">
-                            <button @click="jumpToActiveVehicle">Jump to vehicle locaiton</button>
+                            <button @click="jumpToSelectedVehicle">Jump to vehicle locaiton</button>
                             <label>
-                                <input type="checkbox"
-                                    :checked="dataStore.activeVehicle.vehicleName == dataStore.trackedVehicleName"
-                                    @change="dataStore.toggleActiveVehicleTrack()"> Track vehicle on map
+                                <input type="checkbox" v-model="dataStore.trackSelectedVehicle"> Track vehicle on map
                             </label>
                         </div>
                         <div>
                             <label class="dashboard__item-label">Current Speed</label>
-                            <ViriBar :percentage-full="speedPercentage(dataStore.activeVehicle.state.speed)"
-                                :label="`${dataStore.activeVehicle.state.speed.toFixed(1)}&nbsp;km/h`" />
+                            <ViriBar :percentage-full="speedPercentage(selectedVehicle.state.speed)"
+                                :label="`${selectedVehicle.state.speed.toFixed(1)}&nbsp;km/h`" />
                         </div>
                         <div>
                             <label class="dashboard__item-label">State of charge</label>
-                            <ViriBar :percentage-full="dataStore.activeVehicle.state.stateOfCharge"
-                                :label="`${dataStore.activeVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
+                            <ViriBar :percentage-full="selectedVehicle.state.stateOfCharge"
+                                :label="`${selectedVehicle.state.stateOfCharge.toFixed(1)}&nbsp;%`" />
                         </div>
                         <div class="dashboard__plain-values">
                             <div class="dashboard__plain-value-item">
                                 <label class="dashboard__item-label">Energy</label>
-                                <div>{{ dataStore.activeVehicle.state.energy.toFixed(1) }} kW</div>
+                                <div>{{ selectedVehicle.state.energy.toFixed(1) }} kW</div>
                             </div>
                             <div class="dashboard__plain-value-item">
                                 <label class="dashboard__item-label">Odometer</label>
-                                <div>{{ dataStore.activeVehicle.state.odometer.toFixed(1) }} km</div>
+                                <div>{{ selectedVehicle.state.odometer.toFixed(1) }} km</div>
                             </div>
                         </div>
                     </div>
