@@ -18,11 +18,11 @@ export default class VehicleDataBuffer {
     }
 
     add(time: number, speed: number, stateOfCharge: number) {
-        if (this.timestamp != 0 && Math.round(this.timestamp / 5000) != Math.round(time / 5000)) {
+        if (this.timestamp != 0 && Math.floor(this.timestamp / 5000) != Math.floor(time / 5000)) {
             return this.flush()
         }
 
-        if (!this.timestamp) this.timestamp = time
+        this.timestamp = time
         this.speed.push(speed)
         this.stateOfCharge.push(stateOfCharge)
     }
