@@ -101,12 +101,30 @@ To further improve the performance of Chart.js the following actions were done:
 Using a Vue reactive array for data in a Chart.js dataset does not work nicely.
 Chart.js does have a Vue wrapper implementation that knows that and smartly copies data from its props into the Chart.js dataset.
 However, using this wrapper or trying to use a similar approach without it (having a reactive array "the Vue way" and synchronizing it with data in Chart.js) introduces a major overhead, with the application mainly busy maintaining a reactive source of data which is never needed by itself.
-So after some consideration I've chosen to go "less Vue way", with the moving average data being emitted via events (event per point), consumed by the root component and being sent to the chart component. Thus the chart component has a method for accepting a data point as part of its interface, exposed via defineExpose. Performance has raised significantly, and the interfaces still seem pretty clean. But yeah, it's not a 100% reactivity-based application now, with some data flowing as event payload.
+So after some consideration I've chosen to go "less Vue way", with the moving average data being emitted via events (event per point), consumed by the root component and being sent to the chart component. Thus the chart component has a method for accepting a data point as part of its interface, exposed via defineExpose. No third-party view wrappers over Chart.js are used. Performance has raised significantly, and the interfaces still seem pretty clean. But yeah, it's not a 100% reactivity-based application now, with some data flowing as event payload.
 
 ## Implementation details
+
 ### ViriBar
+
+A simple classic "dumb" Vue component with reactive props. Good to have it, considering the next two!
+
 ### ViriMap
-### ViriChart
+
+Uses the Vue wrapper (`vue-yandex-maps`) to display a Yandex Maps component with a collection of markers corresponding to vehicles.
+Unfortunately, attempting to provide new values for the props of the third-party maps components does not cause the map to update, so instead I had to get hold of references to the underlying map and markers and manually update them watching the props of ViriMap.
+The component also exposes the `jumpTo` method to immediately center the map around the given marker.
+Yandex maps has a predefined set of marker colors, so one of such colors is passed as a property of each marker in props.
+ViriMap is also "dumb" in the sense it's solely driven by its props and does not interact with other parts of the application.
+
+### ViriTimeChart
+
+Has a totally minimalistic template with just a canvas wrapped in a div and an exposed method (`addDataPoint`) to carefully add new data to the chart.
+Initializes the canvas with a line chart sporting a time scale for X and supporting multiple color-coded datasets (we use them to display data about the different vehicles)
+The most interesting prop would be `timeWindowMs`, allowing to specify the time range covered by the X axis.
+`_getChart` is exposed for tests only
+The component is again "dumb", not interacting directly with the store, websockets or other parts of the application
+
 ### The store
 ### The DataListener
 ### The App

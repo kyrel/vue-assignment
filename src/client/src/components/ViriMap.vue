@@ -6,7 +6,6 @@ import type { MapSettings } from 'vue-yandex-maps/dist/types';
 
 import type ymaps from 'yandex-maps'
 
-
 const props = defineProps<{
     latitude: number,
     longitude: number,
@@ -27,7 +26,6 @@ const yandexMapSettings: MapSettings = {
     lang: 'en_RU'
 }
 
-//const marker = ref<InstanceType<typeof YandexMarker> | null>(null)
 let map: ymaps.Map | null = null;
 const markerRefs = [] as { id: string, marker: InstanceType<typeof YandexMarker> & ymaps.Placemark }[]
 
@@ -39,8 +37,6 @@ function storeMarkerRef(id: string, component: InstanceType<typeof YandexMarker>
 
 watch([() => props.markers, () => props.selectedMarkerId], ([markers, selectedMarkerId]) => {
     if (!map) return
-    //remove markers that are no longer in props
-    //add markers that are not here (BUT HOW)
     //set marker coords
     for (const propMarker of markers) {
         const markerRef = markerRefs.find(m => m.id == propMarker.id)
