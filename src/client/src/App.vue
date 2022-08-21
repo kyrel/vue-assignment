@@ -129,15 +129,19 @@ async function setActiveVehicle(vehicleName: string) {
     row-gap: 20px;
 }
 
+@mixin flex-row($column-gap, $row-gap: 10px) {
+    display: flex;
+    flex-flow: row wrap;
+    row-gap: $row-gap;
+    column-gap: $column-gap;
+}
+
 /* @define dashboard */
 .dashboard {
     @include flex-column;
 
     &__map-and-details {
-        display: flex;
-        flex-flow: row wrap;
-        column-gap: 20px;
-        row-gap: 10px;
+        @include flex-row($column-gap: 20px);
     }
 
     &__map {
@@ -161,12 +165,10 @@ async function setActiveVehicle(vehicleName: string) {
     }
 
     &__vehicle-selector {
+        @include flex-row($column-gap: 10px);
+
         border-bottom: 1px solid var(--color-border);
         padding-bottom: 4px;
-        display: flex;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        row-gap: 10px;
     }
 
     &__vehicle-button {
@@ -180,15 +182,11 @@ async function setActiveVehicle(vehicleName: string) {
     }
 
     &__vehicle-map-controls {
-        display: flex;
-        flex-flow: row wrap;
-        column-gap: 12px;
+        @include flex-row($column-gap: 12px);
     }
 
     &__plain-values {
-        display: flex;
-        flex-flow: row wrap;
-        row-gap: 10px;
+        @include flex-row($column-gap: 0);
     }
 
     &__plain-value-item {
