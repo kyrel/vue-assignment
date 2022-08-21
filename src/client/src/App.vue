@@ -7,10 +7,12 @@ import ViriTimeChart from './components/ViriTimeChart.vue'
 import { nextTick, ref } from 'vue';
 import colorPool from '@/colorPool'
 import '@/assets/color-coding.scss'
+import { DataListener } from './dataListener';
 
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 10
 
 const dataStore = useDataStore()
+
 function speedPercentage(val: number) {
     const max = 150
     if (val > max) return 100
@@ -25,6 +27,17 @@ dataStore.addDataHistoryListener((data) => {
     stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.timestamp, data.stateOfCharge)
 })
 
+dataStore.addDataResetListener(() => {
+    speedChart.value?.reset()
+    stateOfChargeChart.value?.reset()
+})
+
+const dataListener = new DataListener(
+    (vehicleName, state) => { dataStore.processDataPoint(vehicleName, state) },
+    () => { dataStore.beReadyToReset() })
+
+dataListener.connect()
+
 function jumpToActiveVehicle() {
     if (!map.value) return
     if (!dataStore.activeVehicle) return
@@ -35,9 +48,9 @@ function jumpToActiveVehicle() {
 
 const showDetails = ref(true)
 
-async function setActiveVehicle(vehicleName: string) {
+async function selectVehicle(vehicleName: string) {
     showDetails.value = false
-    dataStore.setActiveVehicle(vehicleName)
+    dataStore.selectVehicle(vehicleName)
     await nextTick()
     showDetails.value = true
 }
@@ -51,13 +64,12 @@ async function setActiveVehicle(vehicleName: string) {
                     :longitude="dataStore.activeVehicle.state.longitude"
                     :markers="dataStore.vehicles.map(v => ({ id: v.vehicleName, latitude: v.state.latitude, longitude: v.state.longitude, ymapColor: colorPool[v.colorIndex].ymapColor }))"
                     :selected-marker-id="dataStore.activeVehicle?.vehicleName || null"
-                    :track-marker-id="dataStore.trackedVehicleName" @marker-click="setActiveVehicle" />
+                    :track-marker-id="dataStore.trackedVehicleName" @marker-click="selectVehicle" />
             </div>
             <div class="dashboard__details-with-selector">
                 <div class="dashboard__vehicle-selector">
                     <button v-for="vehicle of dataStore.vehicles" :key="vehicle.vehicleName"
-                        @click="setActiveVehicle(vehicle.vehicleName)"
-                        class="dashboard__vehicle-button color-coded-button"
+                        @click="selectVehicle(vehicle.vehicleName)" class="dashboard__vehicle-button color-coded-button"
                         :class="[{ 'color-coded-button--active': vehicle == dataStore.activeVehicle }, 'color-coded-button--' + vehicle.colorIndex]">
                         {{ vehicle.vehicleName }}
                     </button>

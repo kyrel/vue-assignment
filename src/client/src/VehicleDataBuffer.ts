@@ -1,4 +1,4 @@
-export default class VehicleDataBuffer {
+export class VehicleDataBuffer {
     timestamp = 0
     speed: number[] = []
     stateOfCharge: number[] = []

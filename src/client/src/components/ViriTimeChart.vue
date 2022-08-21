@@ -98,15 +98,8 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
         scaleX.max = x
         scaleX.min = x - props.timeWindowMs
     }
-    //some timestamps may no longer be present on props
     if (chartDs.data.length > 0 && x < chartDs.data[0].x) {
-        console.log("A timestamp is less than previous! ", x, y)
-        chartDs.data = []
-        //max-min may require adjestment
-        // let newMax = 0
-        // for (let ds of chart.data.datasets){
-        //     if (ds.data)
-        // }
+        console.log("A timestamp is less than previous! Shouldn't happen!", x, y)        
     }
     else {
         let lengthToChop = 0
@@ -130,7 +123,18 @@ function addDataPoint(datasetName: string, colorIndex: number, x: number, y: num
     chart.update()
 }
 
-defineExpose({ addDataPoint })
+function reset(){
+    if (!chart) return
+    for(let chartDs of chart.data.datasets){
+        chartDs.data = []
+        if (chart.options.scales && chart.options.scales["x"]) {
+            chart.options.scales["x"].max = 0        
+            chart.options.scales["x"].min = 0        
+        }
+    }    
+}
+
+defineExpose({ addDataPoint, reset })
 
 </script>
 <template>

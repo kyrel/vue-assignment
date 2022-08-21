@@ -1,4 +1,4 @@
-import VehicleDataBuffer from "./VehicleDataBuffer"
+import { VehicleDataBuffer } from "./VehicleDataBuffer"
 
 describe('Vehicle data buffer', () => {
     it("adds first item without flushing", () => {

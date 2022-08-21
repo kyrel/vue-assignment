@@ -1,19 +1,6 @@
-import VehicleDataBuffer from '@/VehicleDataBuffer'
+import { VehicleDataBuffer } from '@/VehicleDataBuffer'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
-/**
- * A data point received from the socket
- */
-interface DataPoint {
-    time: number,
-    energy: number,
-    gps: string,
-    odo: number,
-    speed: number,
-    soc: number,
-    vehicleName: string
-}
 
 export interface HistoryData {
     vehicleName: string,
@@ -24,7 +11,7 @@ export interface HistoryData {
 }
 
 export interface VehicleState {
-    latestTime: number,
+    time: number,
     energy: number,
     odometer: number,
     speed: number,
@@ -33,7 +20,7 @@ export interface VehicleState {
     longitude: number
 }
 
-export interface Vehicle {
+interface Vehicle {
     vehicleName: string,
     colorIndex: number,
     state: VehicleState
@@ -50,7 +37,11 @@ export const useDataStore = defineStore("data", () => {
     const trackedVehicleName = ref(null as null | string)
     const history = new class extends EventTarget { }
 
-    function setActiveVehicle(name: string) {
+    /**
+     * Set a vehicle as being selected in the UI
+     * @param name
+     */
+    function selectVehicle(name: string) {
         activeVehicle.value = vehicles.value.find(v => v.vehicleName == name) || null
     }
 
@@ -73,7 +64,7 @@ export const useDataStore = defineStore("data", () => {
         if (vehicleIndex < 0) {
             const indexToInsert = vehicles.value.findIndex(v => v.vehicleName.localeCompare(vehicleName) > 0)
             const newState: VehicleState = {
-                latestTime: 0,
+                time: 0,
                 energy: 0,
                 odometer: 0,
                 speed: 0,
@@ -92,57 +83,81 @@ export const useDataStore = defineStore("data", () => {
         return vehicles.value[vehicleIndex]
     }
 
-    /**
-     * Process a data point that appeared out of the WebSocket connection
-     */
-    function processDataPoint(dataPoint: DataPoint) {
-        //This looks like a corrupt data point, let's skip it
-        if (!dataPoint.time) return
+    let resetHasToBeHandled = false
 
-        const vehicle = getOrAddStoreVehicle(dataPoint.vehicleName)
+    /**
+     * Process a data point that appeared out of an external source
+     */
+    function processDataPoint(vehicleName: string, newState: VehicleState) {
+        //This looks like a corrupt data point, let's skip it
+        if (!newState.time) return
+
+        const vehicle = getOrAddStoreVehicle(vehicleName)
 
         if (!activeVehicle.value) activeVehicle.value = vehicle
 
-        const vehicleState = vehicle.state
-        const vehicleBuffer = vehicleBuffers[dataPoint.vehicleName]
+        const currentState = vehicle.state
+        const vehicleBuffer = vehicleBuffers[vehicleName]
 
-        // we won't process an exactly the same point in time
-        if (+dataPoint.time == vehicleState.latestTime) return
-
-        // we won't process data from the past. yes, even if it still fits the buffer
-        if (+dataPoint.time < vehicleState.latestTime) return
-
-        // set the current state
-        vehicleState.energy = +dataPoint.energy
-        vehicleState.odometer = +dataPoint.odo
-        vehicleState.speed = +dataPoint.speed
-        vehicleState.stateOfCharge = +dataPoint.soc
-        const gps = dataPoint.gps.split("|")
-        vehicleState.latitude = +gps[0]
-        vehicleState.longitude = +gps[1]
-
-        const aggregate = vehicleBuffer.add(+dataPoint.time, +dataPoint.speed, +dataPoint.soc)
-        if (aggregate) {
-            history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: dataPoint.vehicleName, colorIndex: vehicle.colorIndex, ...aggregate } }))
+        if (+newState.time < currentState.time) {
+            if (!resetHasToBeHandled) return // we won't process data from the past unless a server was restarted. yes, even if it still fits the buffer
+            // a server reset happened - let's allow 'data from the past' and rest all time's and vehicleBuffer's
+            for(let v of vehicles.value) {
+                v.state.time = 0
+                vehicleBuffers[v.vehicleName] = new VehicleDataBuffer()
+            }
+            history.dispatchEvent(new CustomEvent("dataReset"))
+            resetHasToBeHandled = false
         }
 
-        vehicleState.latestTime = +dataPoint.time
+        // we won't process an exactly the same point in time
+        if (+newState.time == currentState.time) return
+
+        // set the current state
+        Object.assign(currentState, newState)
+
+        const aggregate = vehicleBuffer.add(+newState.time, newState.speed, newState.stateOfCharge)
+        if (aggregate) {
+            history.dispatchEvent(new CustomEvent("data", { detail: { vehicleName: vehicleName, colorIndex: vehicle.colorIndex, ...aggregate } }))
+        }        
+    }
+    
+    /**
+     * A network error happened or server restarted!
+     * Keep the current data intact, but be ready to reset them if the next data coming from the server is in the past
+     */
+    function beReadyToReset () {
+        resetHasToBeHandled = true
     }
 
+    /**
+     * Add a listener that will be called once the throttled history data are flushed
+     * @param listener 
+     */
     function addDataHistoryListener(listener: (historyData: HistoryData) => void) {
         history.addEventListener("data", (e) => listener((e as CustomEvent).detail))
     }
 
-    let wsUrl = import.meta.env.VITE_WS_ROOT
-    if (wsUrl == "/") {
-        const wsProtocol = window.location.protocol == "https" ? "wss" : "ws"
-        wsUrl = `${wsProtocol}://${window.location.host}/` 
+    /**
+     * Add a listener that will be called once new valid data started arriving after a server restart.
+     * If it's called, the new data redard a time point in the past, so e.g. the charts have to be reset
+     * @param listener 
+     */
+    function addDataResetListener(listener: () => void) {
+        history.addEventListener("dataReset", (e) => listener())
     }
-    const socket = new WebSocket(wsUrl)
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data) as DataPoint
-        processDataPoint(data)
+    
+    return { 
+        vehicles, 
+        activeVehicle, 
+        trackedVehicleName, 
+        processDataPoint, 
+        beReadyToReset, 
+        addDataHistoryListener,
+        addDataResetListener,
+        selectVehicle,
+        trackActiveVehicle,
+        untrackVehicle,
+        toggleActiveVehicleTrack 
     }
-
-    return { vehicles, activeVehicle, trackedVehicleName, addDataHistoryListener, setActiveVehicle, trackActiveVehicle, untrackVehicle, toggleActiveVehicleTrack }
 })
