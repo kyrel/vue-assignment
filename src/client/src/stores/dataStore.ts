@@ -49,7 +49,7 @@ export const useDataStore = defineStore("data", () => {
     }  
 
     let _nextColorIndex = 0
-    const VEHICLE_DATA_BUFFER_RANGE = 10000
+    const VEHICLE_DATA_BUFFER_RANGE = 20000
 
     function _getOrAddStoreVehicle(vehicleName: string) {
         let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)

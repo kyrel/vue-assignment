@@ -10,32 +10,43 @@ import '@/assets/color-coding.scss'
 import { DataListener } from './DataListener';
 import { storeToRefs } from 'pinia';
 
+/** Range of milliseconds that fits in the X axes of the charts */
 const HISTORY_TIME_WINDOW_MS = 1000 * 60 * 20
 
 const dataStore = useDataStore()
 
+/** Some simple logic to covert km/h speed to % of the bar */
 function speedPercentage(val: number) {
     const max = 150
     if (val > max) return 100
     return val * 100 / max
 }
+
 const map = ref(null as null | InstanceType<typeof ViriMap>)
 const speedChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 const stateOfChargeChart = ref(null as null | InstanceType<typeof ViriTimeChart>)
 
 dataStore.addDataHistoryListener((data) => {
+    // A moving average has arrived, send it to graphs
     speedChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.time, data.speed)
     stateOfChargeChart.value?.addDataPoint(data.vehicleName, data.colorIndex, data.time, data.stateOfCharge)
 })
 
 dataStore.addDataResetListener(() => {
+    // Looks like the server has been restared and we need to start all over
     speedChart.value?.reset()
     stateOfChargeChart.value?.reset()
 })
 
 const dataListener = new DataListener(
-    (vehicleName, state) => { dataStore.processDataPoint(vehicleName, state) },
-    () => { dataStore.beReadyToReset() })
+    (vehicleName, state) => {
+        // Let the store process the data from the socket
+        dataStore.processDataPoint(vehicleName, state)
+    },
+    () => {
+        // Inform the store that there was an interruption in data transfer. From now on, if new data will appeat from the past, reset everything
+        dataStore.beReadyToReset()
+    })
 
 dataListener.connect()
 
@@ -51,6 +62,7 @@ const { selectedVehicle } = storeToRefs(dataStore)
 const showDetails = ref(true)
 
 async function selectVehicle(vehicleName: string) {
+    // Show details helps us trigger the animation
     showDetails.value = false
     dataStore.selectVehicle(vehicleName)
     await nextTick()
@@ -124,6 +136,7 @@ async function selectVehicle(vehicleName: string) {
 <style scoped lang="scss">
 /* @define ease-in-out */
 .ease-in-out {
+
     &--enter-active,
     &--leave-active {
         transition: opacity 0.128s ease;
