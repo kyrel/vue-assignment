@@ -136,7 +136,6 @@ async function selectVehicle(vehicleName: string) {
 <style scoped lang="scss">
 /* @define ease-in-out */
 .ease-in-out {
-
     &--enter-active,
     &--leave-active {
         transition: opacity 0.128s ease;
