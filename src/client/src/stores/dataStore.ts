@@ -49,6 +49,7 @@ export const useDataStore = defineStore("data", () => {
     }  
 
     let _nextColorIndex = 0
+    const VEHICLE_DATA_BUFFER_RANGE = 10000
 
     function _getOrAddStoreVehicle(vehicleName: string) {
         let vehicleIndex = vehicles.value.findIndex(v => v.vehicleName == vehicleName)
@@ -68,7 +69,7 @@ export const useDataStore = defineStore("data", () => {
             if (_nextColorIndex > 9) _nextColorIndex = 0
             if (indexToInsert >= 0) vehicles.value.splice(indexToInsert, 0, newVehicle)
             else vehicles.value.push(newVehicle)
-            vehicleBuffers[vehicleName] = new VehicleDataBuffer()
+            vehicleBuffers[vehicleName] = new VehicleDataBuffer(VEHICLE_DATA_BUFFER_RANGE)
             vehicleIndex = indexToInsert >= 0 ? indexToInsert : vehicles.value.length - 1
         }
         return vehicles.value[vehicleIndex]
@@ -86,20 +87,19 @@ export const useDataStore = defineStore("data", () => {
         const vehicle = _getOrAddStoreVehicle(vehicleName)
 
         if (!selectedVehicle.value) selectedVehicle.value = vehicle
-
-        const currentState = vehicle.state
-        const vehicleBuffer = vehicleBuffers[vehicleName]
-
+        const currentState = vehicle.state        
         if (+newState.time < currentState.time) {
             if (!_resetHasToBeHandled) return // we won't process data from the past unless a server was restarted. yes, even if it still fits the buffer
             // a server reset happened - let's allow 'data from the past' and rest all time's and vehicleBuffer's
             for(const v of vehicles.value) {
                 v.state.time = 0
-                vehicleBuffers[v.vehicleName] = new VehicleDataBuffer()
+                vehicleBuffers[v.vehicleName] = new VehicleDataBuffer(VEHICLE_DATA_BUFFER_RANGE)
             }
             _history.dispatchEvent(new CustomEvent("dataReset"))
             _resetHasToBeHandled = false
         }
+
+        const vehicleBuffer = vehicleBuffers[vehicleName]
 
         // we won't process an exactly the same point in time
         if (+newState.time == currentState.time) return

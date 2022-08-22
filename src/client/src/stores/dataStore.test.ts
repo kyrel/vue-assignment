@@ -12,7 +12,7 @@ describe("Data store", () => {
     let buffer: VehicleDataBuffer
 
     beforeEach(() => { 
-        buffer = new VehicleDataBuffer()
+        buffer = new VehicleDataBuffer(10000)
         setActivePinia(createPinia()) 
     })
 
@@ -155,7 +155,7 @@ describe("Data store", () => {
         store.addDataHistoryListener((historyData)=>{
             capturedData = historyData
         })
-        const buffer = new VehicleDataBuffer()
+        const buffer = new VehicleDataBuffer(10000)
         const mockedBufferAdd = vi.mocked(buffer.add)
         mockedBufferAdd.mockReturnValueOnce(undefined)     
         mockedBufferAdd.mockReturnValueOnce(undefined)     

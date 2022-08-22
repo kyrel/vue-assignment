@@ -1,15 +1,19 @@
 export class VehicleDataBuffer {
-    time = 0
-    speed: number[] = []
-    stateOfCharge: number[] = []
+    private time = 0
+    private speed: number[] = []
+    private stateOfCharge: number[] = []
+    private readonly rangeInMs: number
+    constructor(rangeInMs: number) {
+        this.rangeInMs = rangeInMs
+    }
 
-    reset() {
+    private reset() {
         this.time = 0
         this.speed = []
         this.stateOfCharge = []
     }
 
-    flush() {
+    private flush() {
         const avgSpeed = this.speed.reduce((prev, current) => prev + current) / this.speed.length
         const avgStateOfCharge = this.stateOfCharge.reduce((prev, current) => prev + current) / this.stateOfCharge.length
         const result = { time: +this.time, speed: avgSpeed, stateOfCharge: avgStateOfCharge }
@@ -18,7 +22,7 @@ export class VehicleDataBuffer {
     }
 
     add(time: number, speed: number, stateOfCharge: number) {
-        if (this.time != 0 && Math.floor(this.time / 10000) != Math.floor(time / 10000)) {
+        if (this.time != 0 && Math.floor(this.time / this.rangeInMs) != Math.floor(time / this.rangeInMs)) {
             return this.flush()
         }
 
